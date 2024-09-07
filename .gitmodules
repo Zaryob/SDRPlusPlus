@@ -1,0 +1,51 @@
+[submodule "core/submodules/glfw"]
+	path = core/submodules/glfw
+	url = https://github.com/glfw/glfw
+[submodule "core/submodules/zstd"]
+	path = core/submodules/zstd
+	url = https://github.com/facebook/zstd.git
+[submodule "core/submodules/volk"]
+	path = core/submodules/volk
+	url = https://github.com/Zaryob/volk
+[submodule "sdk/airspyone_host"]
+	path = sdk/airspyone_host
+	url = https://github.com/airspy/airspyone_host
+[submodule "sdk/hackrf"]
+	path = sdk/hackrf
+	url = https://github.com/greatscottgadgets/hackrf
+[submodule "sdk/rtaudio"]
+	path = sdk/rtaudio
+	url = https://github.com/thestk/rtaudio
+[submodule "sdk/airspyhf"]
+	path = sdk/airspyhf
+	url = https://github.com/airspy/airspyhf
+[submodule "sdk/pthreads-win32"]
+	path = sdk/pthreads-win32
+	url = https://github.com/GerHobbelt/pthread-win32
+[submodule "sdk/libusb"]
+	path = sdk/libusb
+	url = https://github.com/libusb/libusb/
+[submodule "sdk/bladeRF"]
+	path = sdk/bladeRF
+	url = https://github.com/Nuand/bladeRF
+[submodule "sdk/uhd"]
+	path = sdk/uhd
+	url = https://github.com/EttusResearch/uhd
+[submodule "sdk/libiio"]
+	path = sdk/libiio
+	url = https://github.com/analogdevicesinc/libiio
+[submodule "sdk/libad9361-iio"]
+	path = sdk/libad9361-iio
+	url = https://github.com/analogdevicesinc/libad9361-iio
+[submodule "sdk/librfnm"]
+	path = sdk/librfnm
+	url = https://github.com/rfnm/librfnm
+[submodule "sdk/librtlsdr"]
+	path = sdk/librtlsdr
+	url = https://github.com/steve-m/librtlsdr
+[submodule "sdk/portaudio"]
+	path = sdk/portaudio
+	url = https://github.com/PortAudio/portaudio
+[submodule "sdk/pthread-win32"]
+	path = sdk/pthread-win32
+	url = https://github.com/GerHobbelt/pthread-win32

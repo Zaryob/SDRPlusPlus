@@ -1,4 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
+cmake_policy(SET CMP0002 OLD)
+
 project(sdrpp)
 
 # Backends
@@ -11,7 +13,7 @@ option(OPT_OVERRIDE_STD_FILESYSTEM "Use a local version of std::filesystem on sy
 # Sources
 option(OPT_BUILD_AIRSPY_SOURCE "Build Airspy Source Module (Dependencies: libairspy)" ON)
 option(OPT_BUILD_AIRSPYHF_SOURCE "Build Airspy HF+ Source Module (Dependencies: libairspyhf)" ON)
-option(OPT_BUILD_AUDIO_SOURCE "Build Audio Source Module (Dependencies: rtaudio)" ON)
+option(OPT_BUILD_AUDIO_SOURCE "Build Audio Source Module (Dependencies: rtaudio)" OFF)
 option(OPT_BUILD_BADGESDR_SOURCE "Build BadgeSDR Source Module (Dependencies: libusb)" OFF)
 option(OPT_BUILD_BLADERF_SOURCE "Build BladeRF Source Module (Dependencies: libbladeRF)" OFF)
 option(OPT_BUILD_FILE_SOURCE "Wav file source" ON)
@@ -22,10 +24,10 @@ option(OPT_BUILD_HERMES_SOURCE "Build Hermes Source Module (no dependencies requ
 option(OPT_BUILD_LIMESDR_SOURCE "Build LimeSDR Source Module (Dependencies: liblimesuite)" OFF)
 option(OPT_BUILD_NETWORK_SOURCE "Build Network Source Module (no dependencies required)" ON)
 option(OPT_BUILD_PERSEUS_SOURCE "Build Perseus Source Module (Dependencies: libperseus-sdr)" OFF)
-option(OPT_BUILD_PLUTOSDR_SOURCE "Build PlutoSDR Source Module (Dependencies: libiio, libad9361)" ON)
+option(OPT_BUILD_PLUTOSDR_SOURCE "Build PlutoSDR Source Module (Dependencies: libiio, libad9361)" OFF)
 option(OPT_BUILD_RFNM_SOURCE "Build RFNM Source Module (Dependencies: librfnm)" OFF)
 option(OPT_BUILD_RFSPACE_SOURCE "Build RFspace Source Module (no dependencies required)" ON)
-option(OPT_BUILD_RTL_SDR_SOURCE "Build RTL-SDR Source Module (Dependencies: librtlsdr)" ON)
+option(OPT_BUILD_RTL_SDR_SOURCE "Build RTL-SDR Source Module (Dependencies: librtlsdr)" OFF)
 option(OPT_BUILD_RTL_TCP_SOURCE "Build RTL-TCP Source Module (no dependencies required)" ON)
 option(OPT_BUILD_SDRPP_SERVER_SOURCE "Build SDR++ Server Source Module (no dependencies required)" ON)
 option(OPT_BUILD_SDRPLAY_SOURCE "Build SDRplay Source Module (Dependencies: libsdrplay)" OFF)
@@ -37,7 +39,7 @@ option(OPT_BUILD_USRP_SOURCE "Build USRP Source Module (libuhd)" OFF)
 
 # Sinks
 option(OPT_BUILD_ANDROID_AUDIO_SINK "Build Android Audio Sink Module (Dependencies: AAudio, only for android)" OFF)
-option(OPT_BUILD_AUDIO_SINK "Build Audio Sink Module (Dependencies: rtaudio)" ON)
+option(OPT_BUILD_AUDIO_SINK "Build Audio Sink Module (Dependencies: rtaudio)" OFF)
 option(OPT_BUILD_NETWORK_SINK "Build Audio Sink Module (no dependencies required)" ON)
 option(OPT_BUILD_NEW_PORTAUDIO_SINK "Build the new PortAudio Sink Module (Dependencies: portaudio)" OFF)
 option(OPT_BUILD_PORTAUDIO_SINK "Build PortAudio Sink Module (Dependencies: portaudio)" OFF)
@@ -51,7 +53,7 @@ option(OPT_BUILD_M17_DECODER "Build the M17 decoder module (Dependencies: codec2
 option(OPT_BUILD_METEOR_DEMODULATOR "Build the meteor demodulator module (no dependencies required)" ON)
 option(OPT_BUILD_PAGER_DECODER "Build the pager decoder module (no dependencies required)" ON)
 option(OPT_BUILD_RADIO "Main audio modulation decoder (AM, FM, SSB, etc...)" ON)
-option(OPT_BUILD_RYFI_DECODER "RyFi data link decoder" OFF)
+option(OPT_BUILD_RYFI_DECODER "RyFi data link decoder" ON)
 option(OPT_BUILD_WEATHER_SAT_DECODER "Build the HRPT decoder module (no dependencies required)" OFF)
 
 # Misc
@@ -62,7 +64,7 @@ option(OPT_BUILD_RECORDER "Audio and baseband recorder" ON)
 option(OPT_BUILD_RIGCTL_CLIENT "Rigctl client to make SDR++ act as a panadapter" ON)
 option(OPT_BUILD_RIGCTL_SERVER "Rigctl backend for controlling SDR++ with software like gpredict" ON)
 option(OPT_BUILD_SCANNER "Frequency scanner" ON)
-option(OPT_BUILD_SCHEDULER "Build the scheduler" OFF)
+option(OPT_BUILD_SCHEDULER "Build the scheduler" ON)
 
 # Other options
 option(USE_INTERNAL_LIBCORRECT "Use an internal version of libcorrect" ON)
@@ -332,7 +334,9 @@ target_compile_options(sdrpp PRIVATE ${SDRPP_COMPILER_FLAGS})
 # Copy dynamic libs over
 if (MSVC)
     add_custom_target(do_always ALL xcopy /s \"$<TARGET_FILE_DIR:sdrpp_core>\\*.dll\" \"$<TARGET_FILE_DIR:sdrpp>\" /Y)
-    add_custom_target(do_always_volk ALL xcopy /s \"C:/Program Files/PothosSDR/bin\\volk.dll\" \"$<TARGET_FILE_DIR:sdrpp>\" /Y)
+    add_custom_target(do_always_volk ALL xcopy /s \"$<TARGET_FILE_DIR:volk>\\*.dll\" \"$<TARGET_FILE_DIR:sdrpp>\" /Y)
+    add_custom_target(do_always_zstd ALL xcopy /s \"$<TARGET_FILE_DIR:libzstd_shared>\\*.dll\" \"$<TARGET_FILE_DIR:sdrpp>\" /Y)
+    add_custom_target(do_always_root ALL xcopy /s \"${CMAKE_SOURCE_DIR}\\root\"  \"$<TARGET_FILE_DIR:sdrpp>\" /Y)
 
     if (COPY_MSVC_REDISTRIBUTABLES)
         # Get the list of Visual C++ runtime DLLs

@@ -40,23 +40,19 @@ target_compile_definitions(sdrpp_core PUBLIC INSTALL_PREFIX="${CMAKE_INSTALL_PRE
 target_include_directories(sdrpp_core PUBLIC "src/")
 target_include_directories(sdrpp_core PUBLIC "src/imgui")
 
+
+
+
 # Configure backend includes and libraries
 if (OPT_BACKEND_GLFW)
     target_include_directories(sdrpp_core PUBLIC "backends/glfw")
     target_include_directories(sdrpp_core PUBLIC "backends/glfw/imgui")
+    add_subdirectory(submodules/glfw)
 
-    if (MSVC)
-        # GLFW3
-        find_package(glfw3 CONFIG REQUIRED)
-        target_link_libraries(sdrpp_core PUBLIC glfw)
-    else()
-        find_package(PkgConfig)
-        pkg_check_modules(GLFW3 REQUIRED glfw3)
+ 
+    target_link_libraries(sdrpp_core PUBLIC glfw)
 
-        target_include_directories(sdrpp_core PUBLIC ${GLFW3_INCLUDE_DIRS})
-        target_link_directories(sdrpp_core PUBLIC ${GLFW3_LIBRARY_DIRS})
-        target_link_libraries(sdrpp_core PUBLIC ${GLFW3_LIBRARIES})
-    endif()
+
 endif (OPT_BACKEND_GLFW)
 if (OPT_BACKEND_ANDROID)
     target_include_directories(sdrpp_core PUBLIC "backends/android")
@@ -66,42 +62,14 @@ endif (OPT_BACKEND_ANDROID)
 # Link to libcorrect
 if (USE_INTERNAL_LIBCORRECT)
     target_include_directories(sdrpp_core PUBLIC "libcorrect/include")
-    target_link_libraries(sdrpp_core PUBLIC correct_static)
+    target_link_libraries(sdrpp_core PUBLIC correct)
 endif (USE_INTERNAL_LIBCORRECT)
 
 if (OPT_OVERRIDE_STD_FILESYSTEM)
     target_include_directories(sdrpp_core PUBLIC "std_replacement")
 endif (OPT_OVERRIDE_STD_FILESYSTEM)
 
-if (MSVC)
-    # Lib path
-    target_link_directories(sdrpp_core PUBLIC "C:/Program Files/PothosSDR/lib/")
-
-    # Misc headers
-    target_include_directories(sdrpp_core PUBLIC "C:/Program Files/PothosSDR/include/")
-
-    # Volk
-    target_link_libraries(sdrpp_core PUBLIC volk)
-
-    # OpenGL
-    find_package(OpenGL REQUIRED)
-    target_link_libraries(sdrpp_core PUBLIC OpenGL::GL)
-
-    # GLFW3
-    find_package(glfw3 CONFIG REQUIRED)
-    target_link_libraries(sdrpp_core PUBLIC glfw)
-
-    # FFTW3
-    find_package(FFTW3f CONFIG REQUIRED)
-    target_link_libraries(sdrpp_core PUBLIC FFTW3::fftw3f)
-
-    # WinSock2
-    target_link_libraries(sdrpp_core PUBLIC wsock32 ws2_32 iphlpapi)
-
-    # ZSTD
-    find_package(zstd CONFIG REQUIRED)
-    target_link_libraries(sdrpp_core PUBLIC zstd::libzstd_shared)
-elseif (ANDROID)
+if (ANDROID)
     target_include_directories(sdrpp_core PUBLIC
         /sdr-kit/${ANDROID_ABI}/include
         ${ANDROID_NDK}/sources/android/native_app_glue
@@ -117,45 +85,47 @@ elseif (ANDROID)
         log
     )
 else()
-    find_package(PkgConfig)
+    # Lib path
+    target_link_directories(sdrpp_core PUBLIC "C:/Program Files/PothosSDR/lib/")
+
+    # Misc headers
+    target_include_directories(sdrpp_core PUBLIC "C:/Program Files/PothosSDR/include/")
+
+    # Volk
+    add_subdirectory(submodules/volk)
+    target_link_libraries(sdrpp_core PUBLIC volk)
+
+    # OpenGL
     find_package(OpenGL REQUIRED)
+    target_link_libraries(sdrpp_core PUBLIC OpenGL::GL)
 
-    pkg_check_modules(FFTW3 REQUIRED fftw3f)
-    pkg_check_modules(VOLK REQUIRED volk)
-    pkg_check_modules(GLFW3 REQUIRED glfw3)
-    pkg_check_modules(LIBZSTD REQUIRED libzstd)
+    # GLFW3
+    #find_package(glfw3 CONFIG REQUIRED)
+    target_link_libraries(sdrpp_core PUBLIC glfw)
 
-    target_include_directories(sdrpp_core PUBLIC
-        ${OPENGL_INCLUDE_DIRS}
-        ${FFTW3_INCLUDE_DIRS}
-        ${GLFW3_INCLUDE_DIRS}
-        ${VOLK_INCLUDE_DIRS}
-        ${LIBZSTD_INCLUDE_DIRS}
-    )
-    
-    target_link_directories(sdrpp_core PUBLIC
-        ${OPENGL_LIBRARY_DIRS}
-        ${FFTW3_LIBRARY_DIRS}
-        ${GLFW3_LIBRARY_DIRS}
-        ${VOLK_LIBRARY_DIRS}
-        ${LIBZSTD_LIBRARY_DIRS}
-    )
+    # FFTW3
+    #find_package(FFTW3f CONFIG REQUIRED)
+    set (BUILD_SHARED_LIBS OFF)
+    set (BUILD_TESTS OFF)
+    set (ENABLE_FLOAT ON)
+    set (ENABLE_SSE ON)
 
-    target_link_libraries(sdrpp_core PUBLIC
-        ${OPENGL_LIBRARIES}
-        ${FFTW3_LIBRARIES}
-        ${GLFW3_LIBRARIES}
-        ${VOLK_LIBRARIES}
-        ${LIBZSTD_LIBRARIES}
-    )
+    set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+    add_subdirectory(submodules/fftw)
+    set_target_properties ("fftw3f" PROPERTIES POSITION_INDEPENDET_CODE ON)
+    target_include_directories(sdrpp_core PUBLIC ${CMAKE_SOURCE_DIR}/core/submodules/fftw/api)
+    target_link_libraries(sdrpp_core PUBLIC fftw3f)
 
-    if (NOT USE_INTERNAL_LIBCORRECT)
-        pkg_check_modules(CORRECT REQUIRED libcorrect)
-        target_include_directories(sdrpp_core PUBLIC ${CORRECT_INCLUDE_DIRS})
-        target_link_directories(sdrpp_core PUBLIC ${CORRECT_LIBRARY_DIRS})
-        target_link_libraries(sdrpp_core PUBLIC ${CORRECT_LIBRARIES})
-    endif (NOT USE_INTERNAL_LIBCORRECT)
+    # WinSock2
+    if(WIN32)
+        target_link_libraries(sdrpp_core PUBLIC wsock32 ws2_32 iphlpapi)
+    endif(WIN32)
+    # ZSTD
+    #find_package(zstd CONFIG REQUIRED)
+    add_subdirectory(submodules/zstd/build/cmake)
+    target_include_directories(sdrpp_core PUBLIC submodules/zstd/lib)
 
+    target_link_libraries(sdrpp_core PUBLIC libzstd_shared)
     if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
         target_link_libraries(sdrpp_core PUBLIC stdc++fs)
     endif ()

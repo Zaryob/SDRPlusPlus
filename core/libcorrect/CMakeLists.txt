@@ -69,21 +69,21 @@ add_subdirectory(src)
 
 set(INSTALL_HEADERS "${PROJECT_BINARY_DIR}/include/correct.h")
 
-add_custom_target(correct-h ALL COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/include/correct.h ${PROJECT_BINARY_DIR}/include/correct.h)
+#add_custom_target(correct-h ALL COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/include/correct.h ${PROJECT_BINARY_DIR}/include/correct.h)
 
 if(HAVE_SSE)
   set(correct_obj_files $<TARGET_OBJECTS:correct-reed-solomon> $<TARGET_OBJECTS:correct-convolutional> $<TARGET_OBJECTS:correct-convolutional-sse>)
   set(INSTALL_HEADERS ${INSTALL_HEADERS} ${PROJECT_BINARY_DIR}/include/correct-sse.h)
-  add_custom_target(correct-sse-h ALL COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/include/correct-sse.h ${PROJECT_BINARY_DIR}/include/correct-sse.h)
+  #add_custom_target(correct-sse-h ALL COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/include/correct-sse.h ${PROJECT_BINARY_DIR}/include/correct-sse.h)
 else()
   set(correct_obj_files $<TARGET_OBJECTS:correct-reed-solomon> $<TARGET_OBJECTS:correct-convolutional>)
 endif()
-add_library(correct SHARED ${correct_obj_files})
-add_library(correct_static STATIC ${correct_obj_files})
-set_target_properties(correct_static PROPERTIES OUTPUT_NAME "correct")
+#add_library(correct SHARED ${correct_obj_files})
+add_library(correct ${correct_obj_files})
+#set_target_properties(correct_static PROPERTIES OUTPUT_NAME "correct")
 if(HAVE_SSE)
+  #target_compile_definitions(correct PUBLIC HAVE_SSE=1)
   target_compile_definitions(correct PUBLIC HAVE_SSE=1)
-  target_compile_definitions(correct_static PUBLIC HAVE_SSE=1)
 endif()
 
 add_subdirectory(util)
@@ -95,12 +95,12 @@ add_subdirectory(tools)
 #         DESTINATION lib)
 # install(FILES ${INSTALL_HEADERS} DESTINATION "${CMAKE_INSTALL_PREFIX}/include")
 
-add_library(fec_shim_static EXCLUDE_FROM_ALL src/fec_shim.c ${correct_obj_files})
-set_target_properties(fec_shim_static PROPERTIES OUTPUT_NAME "fec")
+#add_library(fec_shim_static EXCLUDE_FROM_ALL src/fec_shim.c ${correct_obj_files})
+#set_target_properties(fec_shim_static PROPERTIES OUTPUT_NAME "fec")
 add_library(fec_shim_shared SHARED EXCLUDE_FROM_ALL src/fec_shim.c ${correct_obj_files})
 set_target_properties(fec_shim_shared PROPERTIES OUTPUT_NAME "fec")
 add_custom_target(fec-shim-h COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/include/fec_shim.h ${PROJECT_BINARY_DIR}/include/fec.h)
-add_custom_target(shim DEPENDS fec_shim_static fec_shim_shared fec-shim-h)
+#add_custom_target(shim DEPENDS fec_shim_static fec_shim_shared fec-shim-h)
 
 # install(TARGETS fec_shim_static fec_shim_shared
 #         DESTINATION lib
