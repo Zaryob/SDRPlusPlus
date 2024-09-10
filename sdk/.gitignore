@@ -1,0 +1,9 @@
+fftw_build/
+hackrf_build/
+libiio_build/
+librtlsdr_build/
+pthread_build/
+rtaudio_build/
+zstd_build/
+libad9361_build/
+libxml_build/
