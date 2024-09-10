@@ -7,9 +7,25 @@ include(${SDRPP_MODULE_CMAKE})
 
 if (MSVC)
     # Lib path
-    target_link_directories(hackrf_source PRIVATE "C:/Program Files/PothosSDR/bin/")
+    set(CMAKE_FIND_LIBRARY_SUFFIXES ".dll.a" ".a" ".lib")
+
+    target_link_directories(hackrf_source PRIVATE  "${CMAKE_SOURCE_DIR}/sdk/out/bin")
+    
+    target_include_directories(hackrf_source PUBLIC "${CMAKE_SOURCE_DIR}/sdk/out/include")
 
     target_link_libraries(hackrf_source PRIVATE hackrf)
+    
+    # Copy the audio_source.dll to the output directory
+    add_custom_command(TARGET hackrf_source POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy_if_different
+		"${CMAKE_CURRENT_BINARY_DIR}/hackrf_source.dll"
+		$<TARGET_FILE_DIR:sdrpp>/modules
+	)
+    add_custom_command(TARGET hackrf_source POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_SOURCE_DIR}/sdk/out/bin/hackrf.dll"
+		$<TARGET_FILE_DIR:sdrpp>/
+	)
 elseif (ANDROID)
     target_include_directories(hackrf_source PUBLIC
         /sdr-kit/${ANDROID_ABI}/include/libhackrf
