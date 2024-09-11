@@ -35,7 +35,7 @@ option(OPT_BUILD_SOAPY_SOURCE "Build SoapySDR Source Module (Dependencies: soapy
 option(OPT_BUILD_SPECTRAN_SOURCE "Build Spectran Source Module (Dependencies: Aaronia RTSA Suite)" OFF)
 option(OPT_BUILD_SPECTRAN_HTTP_SOURCE "Build Spectran HTTP Source Module (no dependencies required)" ON)
 option(OPT_BUILD_SPYSERVER_SOURCE "Build SpyServer Source Module (no dependencies required)" ON)
-option(OPT_BUILD_USRP_SOURCE "Build USRP Source Module (libuhd)" OFF)
+option(OPT_BUILD_USRP_SOURCE "Build USRP Source Module (libuhd)" ON)
 
 # Sinks
 option(OPT_BUILD_ANDROID_AUDIO_SINK "Build Android Audio Sink Module (Dependencies: AAudio, only for android)" OFF)

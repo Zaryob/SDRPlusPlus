@@ -11,6 +11,8 @@ if (MSVC)
     set(CMAKE_FIND_LIBRARY_SUFFIXES ".dll.a" ".a" ".lib")
 
     target_link_directories(rtl_sdr_source PRIVATE  "${CMAKE_SOURCE_DIR}/sdk/out/bin")
+
+    target_link_directories(rtl_sdr_source PRIVATE  "${CMAKE_SOURCE_DIR}/sdk/out/lib")
     
     target_include_directories(rtl_sdr_source PUBLIC "${CMAKE_SOURCE_DIR}/sdk/out/include")
 
