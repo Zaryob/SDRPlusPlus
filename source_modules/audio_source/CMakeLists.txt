@@ -7,7 +7,7 @@ include(${SDRPP_MODULE_CMAKE})
 
 if (MSVC)
     # Lib path
-     set(CMAKE_FIND_LIBRARY_SUFFIXES ".dll.a" ".a" ".lib")
+    set(CMAKE_FIND_LIBRARY_SUFFIXES ".dll.a" ".a" ".lib")
 
     target_link_directories(audio_source PRIVATE "${CMAKE_SOURCE_DIR}/sdk/out/lib")
 
@@ -21,6 +21,11 @@ if (MSVC)
 		COMMAND ${CMAKE_COMMAND} -E copy_if_different
 		"${CMAKE_CURRENT_BINARY_DIR}/audio_source.dll"
 		$<TARGET_FILE_DIR:sdrpp>/modules
+	)
+    add_custom_command(TARGET audio_source POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_SOURCE_DIR}/sdk/out/bin/rtaudio.dll"
+		$<TARGET_FILE_DIR:sdrpp>/
 	)
 else (MSVC)
     find_package(PkgConfig)

@@ -13,6 +13,16 @@ if (MSVC)
     target_include_directories(usrp_source PUBLIC "${CMAKE_SOURCE_DIR}/sdk/out/include"  "${CMAKE_SOURCE_DIR}/sdk/out/include/boost-1_86")
 
     target_link_libraries(usrp_source PRIVATE uhd)
+    add_custom_command(TARGET usrp_source POST_BUILD
+	    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+	    "${CMAKE_CURRENT_BINARY_DIR}/usrp_source.dll"
+	    $<TARGET_FILE_DIR:sdrpp>/modules
+    )
+    add_custom_command(TARGET usrp_source POST_BUILD
+	    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_SOURCE_DIR}/sdk/out/bin/uhd.dll"
+	    $<TARGET_FILE_DIR:sdrpp>/
+    )
 else (MSVC)
     find_package(PkgConfig)
 

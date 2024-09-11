@@ -97,3 +97,12 @@ cmake -A x64 -B .\uhd_build -S .\uhd\host\ -DENABLE_TESTS=OFF  -DLIBUSB_LIBRARIE
 cmake --build .\uhd_build\ --config Release
 cmake --install .\uhd_build\ --config Release --prefix .\out\
 
+cmake -A x64 -B .\soapsdr_build -S .\SoapySDR\
+cmake --build .\soapsdr_build\ --config Release
+cmake --install .\soapsdr_build\ --config Release --prefix .\out\
+
+
+cmake -A x64 -B .\spdlog_build -S .\spdlog\
+cmake --build .\spdlog_build\ --config Release
+cmake --install .\spdlog_build\ --config Release --prefix .\out\
+

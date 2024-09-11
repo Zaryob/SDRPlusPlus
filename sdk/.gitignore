@@ -9,3 +9,6 @@ libad9361_build/
 libxml_build/
 boost_build/
 uhd_build/
+soapsdr_build/
+spdlog_build/
+rfnm_build/

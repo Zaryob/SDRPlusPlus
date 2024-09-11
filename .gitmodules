@@ -55,3 +55,9 @@
 [submodule "sdk/boost"]
 	path = sdk/boost
 	url = https://github.com/boostorg/boost
+[submodule "sdk/SoapySDR"]
+	path = sdk/SoapySDR
+	url = https://github.com/pothosware/SoapySDR
+[submodule "sdk/spdlog"]
+	path = sdk/spdlog
+	url = https://github.com/gabime/spdlog.git

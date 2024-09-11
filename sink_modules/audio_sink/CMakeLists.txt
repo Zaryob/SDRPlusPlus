@@ -15,6 +15,12 @@ if (MSVC)
     target_include_directories(audio_sink PUBLIC "${CMAKE_SOURCE_DIR}/sdk/out/include/rtaudio/")
 
     target_link_libraries(audio_sink PRIVATE rtaudio)
+    # Copy the audio_sink.dll to the output directory
+    add_custom_command(TARGET audio_sink POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy_if_different
+		"${CMAKE_CURRENT_BINARY_DIR}/audio_sink.dll"
+		$<TARGET_FILE_DIR:sdrpp>/modules
+	)
 else (MSVC)
     find_package(PkgConfig)
 

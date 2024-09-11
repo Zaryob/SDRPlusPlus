@@ -12,6 +12,19 @@ if (MSVC)
 
     target_link_libraries(plutosdr_source PRIVATE libiio)
     target_link_libraries(plutosdr_source PRIVATE libad9361)
+    
+    add_custom_command(TARGET plutosdr_source POST_BUILD
+	    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+	    "${CMAKE_CURRENT_BINARY_DIR}/plutosdr_source.dll"
+	    $<TARGET_FILE_DIR:sdrpp>/modules
+    )
+    add_custom_command(TARGET plutosdr_source POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_SOURCE_DIR}/sdk/out/bin/libiio.dll"
+        "${CMAKE_SOURCE_DIR}/sdk/out/bin/libad9361.dll"
+        "${CMAKE_SOURCE_DIR}/sdk/out/bin/libxml2.dll"
+		$<TARGET_FILE_DIR:sdrpp>/
+	)
 elseif (ANDROID)
     target_include_directories(plutosdr_source PUBLIC
         /sdr-kit/${ANDROID_ABI}/include

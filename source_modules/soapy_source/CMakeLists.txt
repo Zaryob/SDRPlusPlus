@@ -7,12 +7,21 @@ include(${SDRPP_MODULE_CMAKE})
 
 if (MSVC)
     # Lib path
-    target_link_directories(soapy_source PRIVATE "C:/Program Files/PothosSDR/lib/")
-
+    target_link_directories(soapy_source PRIVATE  "${CMAKE_SOURCE_DIR}/sdk/out/lib/")
+    target_include_directories(soapy_source PRIVATE  "${CMAKE_SOURCE_DIR}/sdk/out/include")
     # Misc headers
-    target_include_directories(soapy_source PRIVATE "C:/Program Files/PothosSDR/include/")
 
     target_link_libraries(soapy_source PRIVATE SoapySDR)
+    add_custom_command(TARGET soapy_source POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy_if_different
+		"${CMAKE_CURRENT_BINARY_DIR}/soapy_source.dll"
+		$<TARGET_FILE_DIR:sdrpp>/modules
+	)
+    add_custom_command(TARGET soapy_source POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_SOURCE_DIR}/sdk/out/bin/SoapySDR.dll"
+	$<TARGET_FILE_DIR:sdrpp>/
+)
 else (MSVC)
     find_package(PkgConfig)
 
