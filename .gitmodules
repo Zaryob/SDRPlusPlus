@@ -52,3 +52,6 @@
 [submodule "sdk/libxml2"]
 	path = sdk/libxml2
 	url = https://github.com/GNOME/libxml2
+[submodule "sdk/boost"]
+	path = sdk/boost
+	url = https://github.com/boostorg/boost
