@@ -79,8 +79,7 @@ cmake -A x64 -B .\libiio_build -S .\libiio\ -DCMAKE_PREFIX_PATH="%absoluteLibPat
 cmake --build .\libiio_build\ --config Release
 cmake --install .\libiio_build\ --config Release --prefix .\out\
 
-set absoluteLibiioLibraries = %absoluteLibPath%\libiio.lib
-cmake -A x64 -B .\libad9361_build -S .\libad9361-iio\ -DLIBIIO_LIBRARIES="%absoluteLibiioLibraries%"  -DLIBIIO_INCLUDEDIR="%absoluteIncPath%"
+cmake -A x64 -B .\libad9361_build -S .\libad9361-iio\ -DLIBIIO_LIBRARIES="%absoluteLibPath%\libiio.lib"  -DLIBIIO_INCLUDEDIR="%absoluteIncPath%"
 cmake --build .\libad9361_build\ --config Release
 cmake --install .\libad9361_build\ --config Release --prefix .\out\
 
