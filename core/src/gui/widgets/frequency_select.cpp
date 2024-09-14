@@ -216,6 +216,8 @@ void FrequencySelect::draw() {
 }
 
 void FrequencySelect::setFrequency(int64_t freq) {
+    flog::verbose("Frequency Select {0} Hz", freq);
+
     freq = std::max<int64_t>(0, freq);
     int i = 11;
     for (uint64_t f = freq; i >= 0; i--) {

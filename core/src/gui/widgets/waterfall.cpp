@@ -1001,6 +1001,7 @@ namespace ImGui {
     }
 
     void WaterFall::setBandwidth(double bandWidth) {
+        flog::verbose("[WaterFall] Setting  Bandwidth: {0} Hz", bandWidth);
         double currentRatio = viewBandwidth / wholeBandwidth;
         wholeBandwidth = bandWidth;
         setViewBandwidth(bandWidth * currentRatio);
@@ -1020,6 +1021,8 @@ namespace ImGui {
     }
 
     void WaterFall::setViewBandwidth(double bandWidth) {
+        flog::verbose("[Waterfall] Setting View Bandwidth: {0} Hz", bandWidth);
+
         std::lock_guard<std::recursive_mutex> lck(buf_mtx);
         if (bandWidth == viewBandwidth) {
             return;
@@ -1259,6 +1262,7 @@ namespace ImGui {
     }
 
     void WaterfallVFO::setBandwidth(double bw) {
+        flog::verbose("[WaterfallVFO] Setting Frequency Bandwidth: {0} Hz", bw);
         if (bandwidth == bw || bw < 0) {
             return;
         }
