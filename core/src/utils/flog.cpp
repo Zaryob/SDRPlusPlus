@@ -23,6 +23,7 @@ namespace flog {
     std::mutex outMtx;
 
     const char* TYPE_STR[_TYPE_COUNT] = {
+        "VERBOSE",
         "DEBUG",
         "INFO",
         "WARN",
@@ -32,6 +33,7 @@ namespace flog {
 #ifdef _WIN32
 #define COLOR_WHITE (FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE)
     const WORD TYPE_COLORS[_TYPE_COUNT] = {
+        FOREGROUND_INTENSITY,
         FOREGROUND_GREEN | FOREGROUND_BLUE,
         FOREGROUND_GREEN,
         FOREGROUND_RED | FOREGROUND_GREEN,
@@ -40,6 +42,7 @@ namespace flog {
 #else
 #define COLOR_WHITE "\x1B[0m"
     const char* TYPE_COLORS[_TYPE_COUNT] = {
+        "\x1B[37m",
         "\x1B[36m",
         "\x1B[32m",
         "\x1B[33m",
@@ -49,6 +52,7 @@ namespace flog {
 
 #ifdef __ANDROID__
     const android_LogPriority TYPE_PRIORITIES[_TYPE_COUNT] = {
+        ANDROID_LOG_VERBOSE,
         ANDROID_LOG_DEBUG,
         ANDROID_LOG_INFO,
         ANDROID_LOG_WARN,
@@ -176,6 +180,7 @@ namespace flog {
             fprintf(outStream, COLOR_WHITE "[%02d/%02d/%02d %02d:%02d:%02d.%03d] [%s%s" COLOR_WHITE "] %s\n",
                     nowc->tm_mday, nowc->tm_mon + 1, nowc->tm_year + 1900, nowc->tm_hour, nowc->tm_min, nowc->tm_sec, 0, TYPE_COLORS[type], TYPE_STR[type], out.c_str());
 #endif
+            fflush(outStream);
         }
     }
 

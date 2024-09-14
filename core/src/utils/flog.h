@@ -5,6 +5,7 @@
 
 namespace flog {
     enum Type {
+        TYPE_VERBOSE,
         TYPE_DEBUG,
         TYPE_INFO,
         TYPE_WARNING,
@@ -55,6 +56,10 @@ namespace flog {
         __log__(type, fmt, _args);
     }
 
+    template <typename... Args>
+    inline void verbose(const char* fmt, Args... args) {
+        log(TYPE_VERBOSE, fmt, args...);
+    }
     template <typename... Args>
     inline void debug(const char* fmt, Args... args) {
         log(TYPE_DEBUG, fmt, args...);
