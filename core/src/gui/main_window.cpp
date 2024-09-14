@@ -273,13 +273,13 @@ void MainWindow::draw() {
                 tuner::tune(tuner::TUNER_MODE_CENTER, gui::waterfall.selectedVFO, gui::waterfall.getCenterFrequency() + vfo->generalOffset);
             }
             if (vfo->generalOffset > 0.0) {
-            gui::freqSelect.setFrequency(gui::waterfall.getCenterFrequency() + vfo->generalOffset);
-            gui::freqSelect.frequencyChanged = false;
-            core::configManager.acquire();
-            core::configManager.conf["vfoOffsets"][gui::waterfall.selectedVFO] = vfo->generalOffset;
-            core::configManager.release(true);
+                gui::freqSelect.setFrequency(gui::waterfall.getCenterFrequency() + vfo->generalOffset);
+                gui::freqSelect.frequencyChanged = false;
+                core::configManager.acquire();
+                core::configManager.conf["vfoOffsets"][gui::waterfall.selectedVFO] = vfo->generalOffset;
+                core::configManager.release(true);
+            }
         }
-    }
     }
 
     sigpath::vfoManager.updateFromWaterfall(&gui::waterfall);
