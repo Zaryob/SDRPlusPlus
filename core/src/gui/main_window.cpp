@@ -634,25 +634,66 @@ void MainWindow::draw() {
 
     ImGui::NewLine();
 
-    ImGui::SetCursorPosX((ImGui::GetWindowSize().x / 2.0) - (ImGui::CalcTextSize("Max").x / 2.0));
-    ImGui::TextUnformatted("Max");
+    // Calculate the offset and range dynamically based on fftMax and fftMin
+    float offset = (fftMax + fftMin) / 2.0f;
+    float range = fftMax - fftMin;
+
+    // Offset slider
+    ImGui::SetCursorPosX((ImGui::GetWindowSize().x / 2.0) - (ImGui::CalcTextSize("Offset").x / 2.0));
+    ImGui::TextUnformatted("Offset");
     ImGui::SetCursorPosX((ImGui::GetWindowSize().x / 2.0) - 10 * style::uiScale);
-    if (ImGui::VSliderFloat("##_8_", wfSliderSize, &fftMax, 0.0, -160.0f, "")) {
-        fftMax = std::max<float>(fftMax, fftMin + 10);
+    if (ImGui::VSliderFloat("##_8_", wfSliderSize, &offset, -160.0f, 0.0f, "")) {
+        // Recalculate fftMax and fftMin based on the new offset and range
+        fftMax = offset + range / 2.0f;
+        fftMin = offset - range / 2.0f;
+
+        // Clamp fftMax to ensure it does not exceed 0
+        if (fftMax > 0.0f) {
+            fftMax = 0.0f;
+            fftMin = fftMax - range;  // Adjust fftMin to maintain the range
+        }
+
+        // Clamp fftMin to ensure it does not exceed -160
+        if (fftMin < -160.0f) {
+            fftMin = -160.0f;
+            fftMax = fftMin + range;  // Adjust fftMax to maintain the range
+        }
+
+        flog::verbose("Offset Changed:\n\toffset: {0},\n\trange: {1},\n\tfftMax: {2},\n\tfftMin: {3}", offset, range, fftMax, fftMin);
+
         core::configManager.acquire();
         core::configManager.conf["max"] = fftMax;
+        core::configManager.conf["min"] = fftMin;
         core::configManager.release(true);
     }
 
     ImGui::NewLine();
 
-    ImGui::SetCursorPosX((ImGui::GetWindowSize().x / 2.0) - (ImGui::CalcTextSize("Min").x / 2.0));
-    ImGui::TextUnformatted("Min");
+    // Range slider
+    ImGui::SetCursorPosX((ImGui::GetWindowSize().x / 2.0) - (ImGui::CalcTextSize("Range").x / 2.0));
+    ImGui::TextUnformatted("Range");
     ImGui::SetCursorPosX((ImGui::GetWindowSize().x / 2.0) - 10 * style::uiScale);
     ImGui::SetItemUsingMouseWheel();
-    if (ImGui::VSliderFloat("##_9_", wfSliderSize, &fftMin, 0.0, -160.0f, "")) {
-        fftMin = std::min<float>(fftMax - 10, fftMin);
+    if (ImGui::VSliderFloat("##_9_", wfSliderSize, &range, 10.0f, 160.0f, "")) {
+        // Recalculate fftMax and fftMin based on the new range and current offset
+        fftMax = offset + range / 2.0f;
+        fftMin = offset - range / 2.0f;
+
+        // Clamp fftMax to ensure it does not exceed 0
+        if (fftMax > 0.0f) {
+            fftMax = 0.0f;
+            fftMin = fftMax - range;  // Adjust fftMin to maintain the range
+        }
+        // Clamp fftMin to ensure it does not exceed -160
+        if (fftMin < -160.0f) {
+            fftMin = -160.0f;
+            fftMax = fftMin + range;  // Adjust fftMax to maintain the range
+        }
+
+        flog::verbose("Range Changed:\n\toffset: {0},\n\trange: {1},\n\tfftMax: {2},\n\tfftMin: {3}", offset, range, fftMax, fftMin);
+
         core::configManager.acquire();
+        core::configManager.conf["max"] = fftMax;
         core::configManager.conf["min"] = fftMin;
         core::configManager.release(true);
     }
