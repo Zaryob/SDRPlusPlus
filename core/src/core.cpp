@@ -315,12 +315,19 @@ int sdrpp_main(int argc, char* argv[]) {
     }
 
     // Remove unused elements
+    std::vector<std::string> toRemove;
     auto items = core::configManager.conf.items();
     for (auto const& item : items) {
+        flog::info("Key {0}", item.key());
         if (!defConfig.contains(item.key())) {
             flog::info("Unused key in config {0}, repairing", item.key());
-            core::configManager.conf.erase(item.key());
+            toRemove.push_back(item.key());
         }
+    }
+    // TODO: This is a quick fix, we should probably add a way to remove unused keys in the config
+    //       without having to do this saving like this
+    for (auto const& key : toRemove) {
+        core::configManager.conf.erase(key);
     }
 
     // Update to new module representation in config if needed
@@ -348,7 +355,7 @@ int sdrpp_main(int argc, char* argv[]) {
     // Assert that the resource directory is absolute and check existence
     resDir = std::filesystem::absolute(resDir).string();
     if (!std::filesystem::is_directory(resDir)) {
-        flog::error("Resource directory doesn't exist! Please make sure that you've configured it correctly in config.json (check readme for details)");
+        flog::error("Resource directory \"{0}\" doesn't exist! Please make sure that you've configured it correctly in config.json (check readme for details)", resDir);
         return 1;
     }
 
