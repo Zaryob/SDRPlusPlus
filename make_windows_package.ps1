@@ -8,7 +8,7 @@ cp -Recurse $root_dir/* sdrpp_windows_x64/
 
 # Copy core
 cp $build_dir/Release/* sdrpp_windows_x64/
-cp 'C:/Program Files/PothosSDR/bin/volk.dll' sdrpp_windows_x64/
+cp 'C:/Program Files/PothosSDR/bin/cvolk.dll' sdrpp_windows_x64/
 
 # Copy source modules
 cp $build_dir/source_modules/airspy_source/Release/airspy_source.dll sdrpp_windows_x64/modules/

@@ -18,3 +18,4 @@ SDR++.app
 android/deps
 android/app/assets
 out/
+cmake-build-debug/

@@ -47,10 +47,19 @@ target_include_directories(sdrpp_core PUBLIC "src/imgui")
 if (OPT_BACKEND_GLFW)
     target_include_directories(sdrpp_core PUBLIC "backends/glfw")
     target_include_directories(sdrpp_core PUBLIC "backends/glfw/imgui")
-    add_subdirectory(submodules/glfw)
+
+    if(WIN32)
+        add_subdirectory(submodules/glfw)
+        target_link_libraries(sdrpp_core PUBLIC glfw)
+    else()
+        find_package(PkgConfig REQUIRED)
+        pkg_check_modules(GLFW3 REQUIRED glfw3)
+        target_include_directories(sdrpp_core PUBLIC ${GLFW3_INCLUDE_DIRS})
+        target_link_directories(sdrpp_core PUBLIC ${GLFW3_LIBRARY_DIRS})
+        target_link_libraries(sdrpp_core PUBLIC ${GLFW3_LIBRARIES})
+    endif()
 
  
-    target_link_libraries(sdrpp_core PUBLIC glfw)
 
 
 endif (OPT_BACKEND_GLFW)
@@ -85,47 +94,102 @@ if (ANDROID)
         log
     )
 else()
-    # Lib path
-    target_link_directories(sdrpp_core PUBLIC "C:/Program Files/PothosSDR/lib/")
-
-    # Misc headers
-    target_include_directories(sdrpp_core PUBLIC "C:/Program Files/PothosSDR/include/")
 
     # Volk
-    add_subdirectory(submodules/volk)
-    target_link_libraries(sdrpp_core PUBLIC volk)
+    if(WIN32)
+        add_subdirectory(submodules/volk)
+        target_link_libraries(sdrpp_core PUBLIC volk)
+
+    else()
+        find_package(PkgConfig REQUIRED)
+
+        pkg_check_modules(VOLK REQUIRED volk)
+        target_include_directories(sdrpp_core PUBLIC
+                ${VOLK_INCLUDE_DIRS}
+        )
+
+        target_link_directories(sdrpp_core PUBLIC
+                ${VOLK_LIBRARY_DIRS}
+        )
+
+        target_link_libraries(sdrpp_core PUBLIC
+                ${VOLK_LIBRARIES}
+        )
+
+    endif()
+
 
     # OpenGL
     find_package(OpenGL REQUIRED)
     target_link_libraries(sdrpp_core PUBLIC OpenGL::GL)
 
     # GLFW3
-    #find_package(glfw3 CONFIG REQUIRED)
-    target_link_libraries(sdrpp_core PUBLIC glfw)
+    if(WIN32)
+        add_subdirectory(submodules/glfw)
+        target_link_libraries(sdrpp_core PUBLIC glfw)
+
+    else()
+        find_package(PkgConfig REQUIRED)
+        pkg_check_modules(GLFW3 REQUIRED glfw3)
+
+        target_include_directories(sdrpp_core PUBLIC
+                ${GLFW3_INCLUDE_DIRS}
+        )
+
+        target_link_directories(sdrpp_core PUBLIC
+                ${GLFW3_LIBRARY_DIRS}
+        )
+
+        target_link_libraries(sdrpp_core PUBLIC
+                ${GLFW3_LIBRARIES}
+        )
+
+    endif()
 
     # FFTW3
     #find_package(FFTW3f CONFIG REQUIRED)
-    set (BUILD_SHARED_LIBS OFF)
-    set (BUILD_TESTS OFF)
-    set (ENABLE_FLOAT ON)
-    set (ENABLE_SSE ON)
+    if(WIN32)
+        set (BUILD_SHARED_LIBS OFF)
+        set (BUILD_TESTS OFF)
+        set (ENABLE_FLOAT ON)
+        set (ENABLE_SSE ON)
 
-    set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
-    add_subdirectory(submodules/fftw)
-    set_target_properties ("fftw3f" PROPERTIES POSITION_INDEPENDET_CODE ON)
-    target_include_directories(sdrpp_core PUBLIC ${CMAKE_SOURCE_DIR}/core/submodules/fftw/api)
-    target_link_libraries(sdrpp_core PUBLIC fftw3f)
+        set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+        add_subdirectory(submodules/fftw)
+        set_target_properties ("fftw3f" PROPERTIES POSITION_INDEPENDET_CODE ON)
+        target_include_directories(sdrpp_core PUBLIC ${CMAKE_SOURCE_DIR}/core/submodules/fftw/api)
+        target_link_libraries(sdrpp_core PUBLIC fftw3f)
+    else()
+        find_package(PkgConfig)
+        pkg_check_modules(FFTW3 REQUIRED fftw3f)
+
+        target_include_directories(sdrpp_core PUBLIC
+                ${FFTW3_INCLUDE_DIRS}
+        )
+
+        target_link_directories(sdrpp_core PUBLIC
+                ${FFTW3_LIBRARY_DIRS}
+        )
+
+        target_link_libraries(sdrpp_core PUBLIC
+                ${FFTW3_LIBRARIES}
+        )
+    endif()
 
     # WinSock2
     if(WIN32)
         target_link_libraries(sdrpp_core PUBLIC wsock32 ws2_32 iphlpapi)
     endif(WIN32)
     # ZSTD
-    #find_package(zstd CONFIG REQUIRED)
-    add_subdirectory(submodules/zstd/build/cmake)
-    target_include_directories(sdrpp_core PUBLIC submodules/zstd/lib)
+    if(WIN32)
+        add_subdirectory(submodules/zstd/build/cmake)
+        target_include_directories(sdrpp_core PUBLIC submodules/zstd/lib)
+        target_link_libraries(sdrpp_core PUBLIC libzstd_shared)
+    else()
+        find_package(zstd CONFIG REQUIRED)
+        target_link_libraries(sdrpp_core PUBLIC zstd::libzstd_shared)
+    endif()
 
-    target_link_libraries(sdrpp_core PUBLIC libzstd_shared)
     if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
         target_link_libraries(sdrpp_core PUBLIC stdc++fs)
     endif ()

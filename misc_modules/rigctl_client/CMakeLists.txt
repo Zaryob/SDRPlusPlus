@@ -10,9 +10,12 @@ target_include_directories(rigctl_client PRIVATE "../recorder/src")
 target_include_directories(rigctl_client PRIVATE "../../decoder_modules/meteor_demodulator/src")
 target_include_directories(rigctl_client PRIVATE "../../decoder_modules/radio/src")
 
-# Copy the rigctl_client.dll to the output directory
-add_custom_command(TARGET rigctl_client POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy_if_different
-	"${CMAKE_CURRENT_BINARY_DIR}/rigctl_client.dll"
-	$<TARGET_FILE_DIR:sdrpp>/modules
-)
+if(WIN32)
+
+	# Copy the rigctl_client.dll to the output directory
+	add_custom_command(TARGET rigctl_client POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy_if_different
+		"${CMAKE_CURRENT_BINARY_DIR}/rigctl_client.dll"
+		$<TARGET_FILE_DIR:sdrpp>/modules
+	)
+endif()
