@@ -61,6 +61,8 @@ namespace flog {
 #endif
 
     void __log__(Type type, const char* fmt, const std::vector<std::string>& args) {
+        // Not logging if log level is higher than type
+        if (type < logLevel) { return; }
         // Reserve a buffer for the final output
         int argCount = args.size();
         int fmtLen = strlen(fmt) + 1;

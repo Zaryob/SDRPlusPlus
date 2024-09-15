@@ -132,6 +132,8 @@ int sdrpp_main(int argc, char* argv[]) {
     defConfig["maximized"] = false;
     defConfig["fullscreen"] = false;
 
+    // Logging
+    defConfig["logLevel"] = flog::Type::TYPE_INFO;
     // Menu
     defConfig["menuElements"] = json::array();
 
@@ -338,6 +340,9 @@ int sdrpp_main(int argc, char* argv[]) {
         newMod["enabled"] = true;
         core::configManager.conf["moduleInstances"][_name] = newMod;
     }
+
+    // Set log level
+    flog::logLevel = static_cast<flog::Type>(core::configManager.conf["logLevel"]);
 
     // Load UI scaling
     style::uiScale = core::configManager.conf["uiScale"];
