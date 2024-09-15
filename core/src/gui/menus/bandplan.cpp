@@ -61,7 +61,9 @@ namespace bandplanmenu {
             core::configManager.release(true);
         }
         bandplan::BandPlan_t plan = bandplan::bandplans[bandplan::bandplanNames[bandplanId]];
+        ImGui::PushTextWrapPos(ImGui::GetWindowContentRegionMax().x);
         ImGui::Text("Country: %s (%s)", plan.countryName.c_str(), plan.countryCode.c_str());
         ImGui::Text("Author: %s", plan.authorName.c_str());
+        ImGui::PopTextWrapPos();
     }
 };
