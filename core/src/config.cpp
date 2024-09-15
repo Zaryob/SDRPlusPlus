@@ -42,6 +42,7 @@ void ConfigManager::load(json def, bool lock) {
         save(false);
     }
     if (lock) { mtx.unlock(); }
+    flog::info("Config file '{}' loaded", path);
 }
 
 void ConfigManager::save(bool lock) {
