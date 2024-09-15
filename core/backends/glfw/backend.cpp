@@ -9,7 +9,7 @@
 #include <core.h>
 #include <filesystem>
 #include <stb_image.h>
-#include <stb_image_resize.h>
+#include <stb_image_resize2.h>
 #include <gui/gui.h>
 
 namespace backend {
@@ -79,6 +79,7 @@ namespace backend {
 
     #ifdef __APPLE__
         // GL 3.2 + GLSL 150
+
         const char* glsl_version = "#version 150";
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
@@ -140,15 +141,15 @@ namespace backend {
         icons[8].width = icons[8].height = 196;
         icons[9].pixels = (unsigned char*)malloc(256 * 256 * 4);
         icons[9].width = icons[9].height = 256;
-        stbir_resize_uint8(icons[0].pixels, icons[0].width, icons[0].height, icons[0].width * 4, icons[1].pixels, 16, 16, 16 * 4, 4);
-        stbir_resize_uint8(icons[0].pixels, icons[0].width, icons[0].height, icons[0].width * 4, icons[2].pixels, 24, 24, 24 * 4, 4);
-        stbir_resize_uint8(icons[0].pixels, icons[0].width, icons[0].height, icons[0].width * 4, icons[3].pixels, 32, 32, 32 * 4, 4);
-        stbir_resize_uint8(icons[0].pixels, icons[0].width, icons[0].height, icons[0].width * 4, icons[4].pixels, 48, 48, 48 * 4, 4);
-        stbir_resize_uint8(icons[0].pixels, icons[0].width, icons[0].height, icons[0].width * 4, icons[5].pixels, 64, 64, 64 * 4, 4);
-        stbir_resize_uint8(icons[0].pixels, icons[0].width, icons[0].height, icons[0].width * 4, icons[6].pixels, 96, 96, 96 * 4, 4);
-        stbir_resize_uint8(icons[0].pixels, icons[0].width, icons[0].height, icons[0].width * 4, icons[7].pixels, 128, 128, 128 * 4, 4);
-        stbir_resize_uint8(icons[0].pixels, icons[0].width, icons[0].height, icons[0].width * 4, icons[8].pixels, 196, 196, 196 * 4, 4);
-        stbir_resize_uint8(icons[0].pixels, icons[0].width, icons[0].height, icons[0].width * 4, icons[9].pixels, 256, 256, 256 * 4, 4);
+        stbir_resize_uint8_linear(icons[0].pixels, icons[0].width, icons[0].height, icons[0].width * 4, icons[1].pixels, 16, 16, 16 * 4, stbir_pixel_layout::STBIR_4CHANNEL);
+        stbir_resize_uint8_linear(icons[0].pixels, icons[0].width, icons[0].height, icons[0].width * 4, icons[2].pixels, 24, 24, 24 * 4, stbir_pixel_layout::STBIR_4CHANNEL);
+        stbir_resize_uint8_linear(icons[0].pixels, icons[0].width, icons[0].height, icons[0].width * 4, icons[3].pixels, 32, 32, 32 * 4, stbir_pixel_layout::STBIR_4CHANNEL);
+        stbir_resize_uint8_linear(icons[0].pixels, icons[0].width, icons[0].height, icons[0].width * 4, icons[4].pixels, 48, 48, 48 * 4, stbir_pixel_layout::STBIR_4CHANNEL);
+        stbir_resize_uint8_linear(icons[0].pixels, icons[0].width, icons[0].height, icons[0].width * 4, icons[5].pixels, 64, 64, 64 * 4, stbir_pixel_layout::STBIR_4CHANNEL);
+        stbir_resize_uint8_linear(icons[0].pixels, icons[0].width, icons[0].height, icons[0].width * 4, icons[6].pixels, 96, 96, 96 * 4, stbir_pixel_layout::STBIR_4CHANNEL);
+        stbir_resize_uint8_linear(icons[0].pixels, icons[0].width, icons[0].height, icons[0].width * 4, icons[7].pixels, 128, 128, 128 * 4, stbir_pixel_layout::STBIR_4CHANNEL);
+        stbir_resize_uint8_linear(icons[0].pixels, icons[0].width, icons[0].height, icons[0].width * 4, icons[8].pixels, 196, 196, 196 * 4, stbir_pixel_layout::STBIR_4CHANNEL);
+        stbir_resize_uint8_linear(icons[0].pixels, icons[0].width, icons[0].height, icons[0].width * 4, icons[9].pixels, 256, 256, 256 * 4, stbir_pixel_layout::STBIR_4CHANNEL);
         glfwSetWindowIcon(window, 10, icons);
         stbi_image_free(icons[0].pixels);
         for (int i = 1; i < 10; i++) {
@@ -248,7 +249,7 @@ namespace backend {
 
             glfwGetWindowSize(window, &_winWidth, &_winHeight);
 
-            if (ImGui::IsKeyPressed(GLFW_KEY_F11)) {
+            if (ImGui::IsKeyPressed(ImGuiKey_F11)) {
                 fullScreen = !fullScreen;
                 if (fullScreen) {
                     flog::info("Fullscreen: ON");
