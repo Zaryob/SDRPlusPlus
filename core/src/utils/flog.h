@@ -13,9 +13,10 @@ namespace flog {
         _TYPE_COUNT
     };
 
+    inline extern Type logLevel = TYPE_VERBOSE;
+
     // IO functions
     void __log__(Type type, const char* fmt, const std::vector<std::string>& args);
-
     // Conversion functions
     std::string __toString__(bool value);
     std::string __toString__(char value);

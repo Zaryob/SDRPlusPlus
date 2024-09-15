@@ -132,6 +132,8 @@ int sdrpp_main(int argc, char* argv[]) {
     defConfig["maximized"] = false;
     defConfig["fullscreen"] = false;
 
+    // Logging
+    defConfig["logLevel"] = flog::Type::TYPE_INFO;
     // Menu
     defConfig["menuElements"] = json::array();
 
@@ -318,7 +320,6 @@ int sdrpp_main(int argc, char* argv[]) {
     std::vector<std::string> toRemove;
     auto items = core::configManager.conf.items();
     for (auto const& item : items) {
-        flog::info("Key {0}", item.key());
         if (!defConfig.contains(item.key())) {
             flog::info("Unused key in config {0}, repairing", item.key());
             toRemove.push_back(item.key());
@@ -339,6 +340,9 @@ int sdrpp_main(int argc, char* argv[]) {
         newMod["enabled"] = true;
         core::configManager.conf["moduleInstances"][_name] = newMod;
     }
+
+    // Set log level
+    flog::logLevel = static_cast<flog::Type>(core::configManager.conf["logLevel"]);
 
     // Load UI scaling
     style::uiScale = core::configManager.conf["uiScale"];
