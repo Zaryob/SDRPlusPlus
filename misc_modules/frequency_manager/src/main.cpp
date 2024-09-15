@@ -126,11 +126,135 @@ private:
         }
     }
 
+    bool bookmarkDeleteDialog(std::vector<std::string> selectedNames) {
+        // Bookmark delete confirm dialog
+        // List delete confirmation
+
+        bool deleteBookmark = true;
+        gui::mainWindow.lockWaterfallControls = true;
+        std::string id = "Remove Bookmark##freq_manager_delete_popup_" + name;
+
+        ImGui::OpenPopup(id.c_str());
+
+        char nameBuf[1024];
+        strcpy(nameBuf, editedBookmarkName.c_str());
+
+        ImVec2 mousePos = ImGui::GetMousePos();
+        ImGui::SetNextWindowPos(ImVec2(mousePos.x + 10, mousePos.y + 10), ImGuiCond_Appearing); // Offset to place it near the mouse
+
+        // Show the modal popup
+        if (ImGui::BeginPopupModal(id.c_str(), NULL, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            // Popup content
+            ImGui::TextUnformatted("Deleting selected bookmarks. Are you sure?");
+
+            // Yes button
+            if (ImGui::Button("Yes") || ImGui::IsKeyPressed(ImGuiKey_Enter))
+            {
+                // Perform deletion
+                for (auto& _name : selectedNames)
+                {
+                    bookmarks.erase(_name);
+                }
+
+                // Call save function (assuming it's a method in your class)
+                saveByName(selectedListName);
+
+                // Close the popup and reset state
+                deleteBookmark = false;
+                ImGui::CloseCurrentPopup();
+            }
+
+            ImGui::SameLine();
+
+            // No button
+            if (ImGui::Button("No") || ImGui::IsKeyPressed(ImGuiKey_Escape))
+            {
+                // Just close the popup
+                deleteBookmark = false;
+                ImGui::CloseCurrentPopup();
+            }
+
+            ImGui::EndPopup();
+        }
+
+        return deleteBookmark;
+    }
+
+    bool deleteListDialog(std::string selectedNames) {
+        // List delete confirmation
+
+        bool deleteBookmark = true;
+        gui::mainWindow.lockWaterfallControls = true;
+        std::string id = "Remove List##freq_manager_delete_popup_" + name;
+
+        ImGui::OpenPopup(id.c_str());
+
+        char nameBuf[1024];
+        strcpy(nameBuf, editedBookmarkName.c_str());
+
+        ImVec2 mousePos = ImGui::GetMousePos();
+        ImGui::SetNextWindowPos(ImVec2(mousePos.x + 10, mousePos.y + 10), ImGuiCond_Appearing); // Offset to place it near the mouse
+
+        // Show the modal popup
+        if (ImGui::BeginPopupModal(id.c_str(), NULL, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            // Popup content
+            ImGui::TextUnformatted("Deleting selected bookmarks. Are you sure?");
+
+            // Yes button
+            if (ImGui::Button("Yes") || ImGui::IsKeyPressed(ImGuiKey_Enter))
+            {
+                config.acquire();
+                //config.conf["lists"][_this->selectedListName]["bookmarks"]
+                config.conf["lists"].erase(selectedListName);
+                refreshWaterfallBookmarks(false);
+                config.release(true);
+                refreshLists();
+                selectedListId = std::clamp<int>(selectedListId, 0, listNames.size());
+                //_this->bookmarks
+                if (listNames.size() > 0) {
+                    loadByName(listNames[selectedListId]);
+                }
+                else {
+                    selectedListName = "";
+                }
+                // Close the popup and reset state
+                deleteBookmark = false;
+                ImGui::CloseCurrentPopup();
+            }
+
+            ImGui::SameLine();
+
+            // No button
+            if (ImGui::Button("No") || ImGui::IsKeyPressed(ImGuiKey_Escape))
+            {
+                // Just close the popup
+                deleteBookmark = false;
+                ImGui::CloseCurrentPopup();
+            }
+
+            ImGui::EndPopup();
+        }
+
+        return deleteBookmark;
+    }
     bool bookmarkEditDialog() {
         bool open = true;
         gui::mainWindow.lockWaterfallControls = true;
 
-        std::string id = "Edit##freq_manager_edit_popup_" + name;
+        if(this->selectedListName.empty()) {
+            this->newListOpen = true;
+            return open;
+        }
+
+        std::string id ="";
+        if(createOpen) {
+            id = "Create Bookmark##freq_manager_create_popup_" + name;
+        }
+        else {
+            id = "Edit Bookmark##freq_manager_edit_popup_" + name;
+        }
         ImGui::OpenPopup(id.c_str());
 
         char nameBuf[1024];
@@ -179,6 +303,7 @@ private:
             bool applyDisabled = (strlen(nameBuf) == 0) || (bookmarks.find(editedBookmarkName) != bookmarks.end() && editedBookmarkName != firstEditedBookmarkName);
             if (applyDisabled) { style::beginDisabled(); }
             if (ImGui::Button("Apply") || ImGui::IsKeyPressed(ImGuiKey_Enter)) {
+
                 open = false;
 
                 // If editing, delete the original one
@@ -204,14 +329,22 @@ private:
         gui::mainWindow.lockWaterfallControls = true;
 
         float menuWidth = ImGui::GetContentRegionAvail().x;
-
-        std::string id = "New##freq_manager_new_popup_" + name;
+        std::string id="";
+        if(renameListOpen) {
+            id = "Rename List##freq_manager_new_popup_" + name;
+        }
+        else {
+            id = "New List##freq_manager_new_popup_" + name;
+        }
         ImGui::OpenPopup(id.c_str());
 
         char nameBuf[1024];
         strcpy(nameBuf, editedListName.c_str());
 
-        if (ImGui::BeginPopup(id.c_str(), ImGuiWindowFlags_NoResize)) {
+        ImVec2 mousePos = ImGui::GetMousePos();
+        ImGui::SetNextWindowPos(ImVec2(mousePos.x + 10, mousePos.y + 10), ImGuiCond_Appearing); // Offset to place it near the mouse
+
+        if (ImGui::BeginPopupModal(id.c_str(), NULL, ImGuiWindowFlags_NoResize)) {
             ImGui::LeftLabel("Name");
             ImGui::SetNextItemWidth(menuWidth - ImGui::GetCursorPosX());
             if (ImGui::InputText(("##freq_manager_edit_name" + name).c_str(), nameBuf, 1023)) {
@@ -221,7 +354,7 @@ private:
             bool alreadyExists = (std::find(listNames.begin(), listNames.end(), editedListName) != listNames.end());
 
             if (strlen(nameBuf) == 0 || alreadyExists) { style::beginDisabled(); }
-            if (ImGui::Button("Apply")) {
+            if (ImGui::Button("Apply") || ImGui::IsKeyPressed(ImGuiKey_Enter)) {
                 open = false;
 
                 config.acquire();
@@ -240,8 +373,9 @@ private:
             }
             if (strlen(nameBuf) == 0 || alreadyExists) { style::endDisabled(); }
             ImGui::SameLine();
-            if (ImGui::Button("Cancel")) {
+            if (ImGui::Button("Cancel") || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
                 open = false;
+                createOpen = false;
             }
             ImGui::EndPopup();
         }
@@ -252,13 +386,15 @@ private:
         gui::mainWindow.lockWaterfallControls = true;
 
         float menuWidth = ImGui::GetContentRegionAvail().x;
+        ImVec2 mousePos = ImGui::GetMousePos();
+        ImGui::SetNextWindowPos(ImVec2(mousePos.x + 10, mousePos.y + 10), ImGuiCond_Appearing); // Offset to place it near the mouse
 
-        std::string id = "Select lists##freq_manager_sel_popup_" + name;
+        std::string id = "Select Lists##freq_manager_sel_popup_" + name;
         ImGui::OpenPopup(id.c_str());
 
         bool open = true;
 
-        if (ImGui::BeginPopup(id.c_str(), ImGuiWindowFlags_NoResize)) {
+        if (ImGui::BeginPopupModal(id.c_str(), NULL, ImGuiWindowFlags_NoResize)) {
             // No need to lock config since we're not modifying anything and there's only one instance
             for (auto [listName, list] : config.conf["lists"].items()) {
                 bool shown = list["showOnWaterfall"];
@@ -270,7 +406,7 @@ private:
                 }
             }
 
-            if (ImGui::Button("Ok")) {
+            if (ImGui::Button("Ok")|| ImGui::IsKeyPressed(ImGuiKey_Enter)) {
                 open = false;
             }
             ImGui::EndPopup();
@@ -376,7 +512,6 @@ private:
             }
             _this->editedBookmarkName = buf;
         }
-
     }
 
     static void menuHandler(void* ctx) {
@@ -430,22 +565,8 @@ private:
         }
         if (_this->selectedListName == "") { style::endDisabled(); }
 
-        // List delete confirmation
-        if (ImGui::GenericDialog(("freq_manager_del_list_confirm" + _this->name).c_str(), _this->deleteListOpen, GENERIC_DIALOG_BUTTONS_YES_NO, [_this]() {
-                ImGui::Text("Deleting list named \"%s\". Are you sure?", _this->selectedListName.c_str());
-            }) == GENERIC_DIALOG_BUTTON_YES) {
-            config.acquire();
-            config.conf["lists"].erase(_this->selectedListName);
-            _this->refreshWaterfallBookmarks(false);
-            config.release(true);
-            _this->refreshLists();
-            _this->selectedListId = std::clamp<int>(_this->selectedListId, 0, _this->listNames.size());
-            if (_this->listNames.size() > 0) {
-                _this->loadByName(_this->listNames[_this->selectedListId]);
-            }
-            else {
-                _this->selectedListName = "";
-            }
+        if (_this->deleteListOpen) {
+            _this->deleteListOpen = _this->deleteListDialog(_this->selectedListName);
         }
 
         if (_this->selectedListName == "") { style::beginDisabled(); }
@@ -508,13 +629,8 @@ private:
 
         ImGui::EndTable();
 
-        // Bookmark delete confirm dialog
-        // List delete confirmation
-        if (ImGui::GenericDialog(("freq_manager_del_list_confirm" + _this->name).c_str(), _this->deleteBookmarksOpen, GENERIC_DIALOG_BUTTONS_YES_NO, [_this]() {
-                ImGui::TextUnformatted("Deleting selected bookmaks. Are you sure?");
-            }) == GENERIC_DIALOG_BUTTON_YES) {
-            for (auto& _name : selectedNames) { _this->bookmarks.erase(_name); }
-            _this->saveByName(_this->selectedListName);
+        if( _this->deleteBookmarksOpen) {
+            _this->deleteBookmarksOpen = _this->bookmarkDeleteDialog(selectedNames);
         }
 
         // Bookmark list
@@ -596,7 +712,7 @@ private:
 
         if (_this->selectedListName == "") { style::endDisabled(); }
 
-        if (_this->createOpen) {
+        if (_this->createOpen && !_this->newListOpen) {
             _this->createOpen = _this->bookmarkEditDialog();
         }
 
