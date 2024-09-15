@@ -241,7 +241,9 @@ namespace displaymenu {
                 core::configManager.release(true);
                 colorMapAuthor = map.author;
             }
+            ImGui::PushTextWrapPos(ImGui::GetWindowContentRegionMax().x);
             ImGui::Text("Color map Author: %s", colorMapAuthor.c_str());
+            ImGui::PopTextWrapPos();
         }
 
         if (restartRequired) {
