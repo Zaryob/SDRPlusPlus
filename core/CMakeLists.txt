@@ -48,10 +48,7 @@ if (OPT_BACKEND_GLFW)
     target_include_directories(sdrpp_core PUBLIC "backends/glfw")
     target_include_directories(sdrpp_core PUBLIC "backends/glfw/imgui")
 
-    if(WIN32)
-        add_subdirectory(submodules/glfw)
-        target_link_libraries(sdrpp_core PUBLIC glfw)
-    else()
+    if(!WIN32)
         find_package(PkgConfig REQUIRED)
         pkg_check_modules(GLFW3 REQUIRED glfw3)
         target_include_directories(sdrpp_core PUBLIC ${GLFW3_INCLUDE_DIRS})
@@ -59,10 +56,8 @@ if (OPT_BACKEND_GLFW)
         target_link_libraries(sdrpp_core PUBLIC ${GLFW3_LIBRARIES})
     endif()
 
- 
-
-
 endif (OPT_BACKEND_GLFW)
+
 if (OPT_BACKEND_ANDROID)
     target_include_directories(sdrpp_core PUBLIC "backends/android")
     target_include_directories(sdrpp_core PUBLIC "backends/android/imgui")
