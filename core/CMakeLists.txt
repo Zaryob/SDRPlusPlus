@@ -181,8 +181,19 @@ else()
         target_include_directories(sdrpp_core PUBLIC submodules/zstd/lib)
         target_link_libraries(sdrpp_core PUBLIC libzstd_shared)
     else()
-        find_package(zstd CONFIG REQUIRED)
-        target_link_libraries(sdrpp_core PUBLIC zstd::libzstd_shared)
+        find_package(PkgConfig)
+        pkg_check_modules(LIBZSTD REQUIRED libzstd)
+        target_include_directories(sdrpp_core PUBLIC
+                ${LIBZSTD_INCLUDE_DIRS}
+        )
+
+        target_link_directories(sdrpp_core PUBLIC
+                ${LIBZSTD_LIBRARY_DIRS}
+        )
+
+        target_link_libraries(sdrpp_core PUBLIC
+                ${LIBZSTD_LIBRARIES}
+        )
     endif()
 
     if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
