@@ -14,6 +14,8 @@
 #include <gui/dialogs/dialog_box.h>
 #include <fstream>
 
+#include <backend.h>
+
 SDRPP_MOD_INFO{
     /* Name:            */ "frequency_manager",
     /* Description:     */ "Frequency manager module for SDR++",
@@ -581,7 +583,7 @@ private:
                 _this->editedBookmark.frequency = gui::waterfall.getCenterFrequency();
                 _this->editedBookmark.bandwidth = 0;
                 _this->editedBookmark.mode = 7;
-        }
+            }
             else {
                 _this->editedBookmark.frequency = gui::waterfall.getCenterFrequency() + sigpath::vfoManager.getOffset(gui::waterfall.selectedVFO);
                 _this->editedBookmark.bandwidth = sigpath::vfoManager.getBandwidth(gui::waterfall.selectedVFO);
@@ -803,22 +805,22 @@ private:
 
     bool mouseAlreadyDown = false;
     bool mouseClickedInLabel = false;
+    bool mouseChangeFreq = false;
+    bool bookmarkChangeRf = false;
+
+    double referenceXPos=0.0f;
+    double referenceYPos=0.0f;
+    double moveXPos=0.0f;
+
     static void fftInput(ImGui::WaterFall::InputHandlerArgs args, void* ctx) {
         FrequencyManagerModule* _this = (FrequencyManagerModule*)ctx;
         if (_this->bookmarkDisplayMode == BOOKMARK_DISP_MODE_OFF) { return; }
 
-        if (_this->mouseClickedInLabel) {
-            if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-                _this->mouseClickedInLabel = false;
-            }
-            gui::waterfall.inputHandled = true;
-            return;
-        }
-
+        
         // First check that the mouse clicked outside of any label. Also get the bookmark that's hovered
         bool inALabel = false;
         WaterfallBookmark hoveredBookmark;
-        std::string hoveredBookmarkName;
+        int hoveredBookmarkIndex=-1;
 
         if (_this->bookmarkDisplayMode == BOOKMARK_DISP_MODE_TOP) {
             int count = _this->waterfallBookmarks.size();
@@ -834,7 +836,7 @@ private:
                 if (ImGui::IsMouseHoveringRect(clampedRectMin, clampedRectMax)) {
                     inALabel = true;
                     hoveredBookmark = bm;
-                    hoveredBookmarkName = bm.bookmarkName;
+                    hoveredBookmarkIndex = i;
                     break;
                 }
             }
@@ -853,11 +855,65 @@ private:
                 if (ImGui::IsMouseHoveringRect(clampedRectMin, clampedRectMax)) {
                     inALabel = true;
                     hoveredBookmark = bm;
-                    hoveredBookmarkName = bm.bookmarkName;
+                    hoveredBookmarkIndex = i;
                     break;
                 }
             }
         }
+
+        double xpos, ypos;
+        backend::getMouseScreenPos(xpos, ypos);
+
+        if (_this->mouseClickedInLabel) {
+            if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+                _this->mouseClickedInLabel = false;
+
+                if (!_this->bookmarkChangeRf) {
+                    _this->mouseChangeFreq = true;
+                }
+            }
+            else {
+                if (_this->referenceXPos == 0.0f && _this->referenceYPos == 0.0f) {
+                    _this->referenceXPos = xpos;
+                    _this->referenceYPos = ypos;
+                    _this->moveXPos = xpos;
+                }
+                else {
+                    if (_this->bookmarkChangeRf) {
+                        if (_this->moveXPos != xpos && hoveredBookmarkIndex != -1) {
+
+                            int refCenter = _this->moveXPos - args.fftRectMin.x;
+                            if (refCenter >= 0 && refCenter < args.dataWidth) {
+                                double centerXpos = args.fftRectMin.x + std::round((hoveredBookmark.bookmark.frequency - args.lowFreq) * args.freqToPixelRatio);
+
+                                double off = ((((double)refCenter / ((double)args.dataWidth / 2.0)) - 1.0) * (args.bandWidth / 2.0)) + args.viewOffset - centerXpos;
+                                off += args.centerFreq;
+                                flog::warn("Bookmark Moved to {0} : {1}", centerXpos, off);
+                                hoveredBookmark.bookmark.frequency = off;
+                                
+                                _this->waterfallBookmarks[hoveredBookmarkIndex] = hoveredBookmark;
+                            }
+
+                            _this->moveXPos = xpos;
+                        }
+                    }
+                    else {
+                        if (xpos < _this->moveXPos || xpos > _this->moveXPos) {
+                            _this->bookmarkChangeRf = true;
+                            _this->moveXPos = ypos;
+                            flog::warn("Mouse ready to move bookmark");
+                        }
+                    }
+                }
+                // else{
+                //     _this->bookmarkChangeRf=true;
+                // }
+            }
+
+            gui::waterfall.inputHandled = true;
+            return;
+        }
+
 
         // Check if mouse was already down
         if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !inALabel) {
@@ -865,28 +921,41 @@ private:
         }
         if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
             _this->mouseAlreadyDown = false;
-            _this->mouseClickedInLabel = false;
+            //_this->mouseClickedInLabel = false;
         }
 
         // If yes, cancel
-        if (_this->mouseAlreadyDown || !inALabel) { return; }
+        if (_this->mouseAlreadyDown || !inALabel) {
+            _this->mouseChangeFreq =false;
+            return;
+        }
+
+        if(_this->bookmarkChangeRf){
+            _this->bookmarkChangeRf=false;
+            flog::warn("bookmark freq change");
+            _this->referenceXPos=0.f;
+            _this->referenceYPos=0.f;
+            _this->moveXPos = 0.f;
+        }
 
         gui::waterfall.inputHandled = true;
 
-        double centerXpos = args.fftRectMin.x + std::round((hoveredBookmark.bookmark.frequency - args.lowFreq) * args.freqToPixelRatio);
-        ImVec2 nameSize = ImGui::CalcTextSize(hoveredBookmarkName.c_str());
-        ImVec2 rectMin = ImVec2(centerXpos - (nameSize.x / 2) - 5, (_this->bookmarkDisplayMode == BOOKMARK_DISP_MODE_BOTTOM) ? (args.fftRectMax.y - nameSize.y) : args.fftRectMin.y);
-        ImVec2 rectMax = ImVec2(centerXpos + (nameSize.x / 2) + 5, (_this->bookmarkDisplayMode == BOOKMARK_DISP_MODE_BOTTOM) ? args.fftRectMax.y : args.fftRectMin.y + nameSize.y);
-        ImVec2 clampedRectMin = ImVec2(std::clamp<double>(rectMin.x, args.fftRectMin.x, args.fftRectMax.x), rectMin.y);
-        ImVec2 clampedRectMax = ImVec2(std::clamp<double>(rectMax.x, args.fftRectMin.x, args.fftRectMax.x), rectMax.y);
 
         if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
             _this->mouseClickedInLabel = true;
-            applyBookmark(hoveredBookmark.bookmark, gui::waterfall.selectedVFO);
         }
 
+        if(_this->mouseChangeFreq && inALabel){
+            _this->mouseChangeFreq=false;
+            _this->referenceXPos=0.f;
+            _this->referenceYPos=0.f;
+            _this->moveXPos = 0.f;
+            applyBookmark(hoveredBookmark.bookmark, gui::waterfall.selectedVFO);
+        }
+        //if(ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+
         ImGui::BeginTooltip();
-        ImGui::TextUnformatted(hoveredBookmarkName.c_str());
+        ImGui::TextUnformatted(hoveredBookmark.bookmarkName.c_str());
         ImGui::Separator();
         ImGui::Text("List: %s", hoveredBookmark.listName.c_str());
         ImGui::Text("Frequency: %s", utils::formatFreq(hoveredBookmark.bookmark.frequency).c_str());

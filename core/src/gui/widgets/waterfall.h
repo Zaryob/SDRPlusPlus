@@ -193,8 +193,14 @@ namespace ImGui {
             ImVec2 waterfallRectMax;
             double lowFreq;
             double highFreq;
+            double centerFreq;
             double freqToPixelRatio;
             double pixelToFreqRatio;
+
+            int dataWidth;
+            double bandWidth;
+            double viewOffset;
+
         };
 
         bool inputHandled = false;

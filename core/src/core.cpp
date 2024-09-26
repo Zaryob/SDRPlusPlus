@@ -81,7 +81,7 @@ int sdrpp_main(int argc, char* argv[]) {
 
 #ifdef _WIN32
     // Free console if the user hasn't asked for a console and not in server mode
-    if (!core::args["con"].b() && !serverMode) { FreeConsole(); }
+    //if (!core::args["con"].b() && !serverMode) { FreeConsole(); }
 
     // Set error mode to avoid abnoxious popups
     SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_NOGPFAULTERRORBOX | SEM_FAILCRITICALERRORS);
