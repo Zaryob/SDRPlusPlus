@@ -865,8 +865,12 @@ namespace ImGui {
             args.waterfallRectMax = wfMax;
             args.lowFreq = lowerFreq;
             args.highFreq = upperFreq;
+            args.centerFreq = centerFreq;
             args.freqToPixelRatio = (double)dataWidth / viewBandwidth;
             args.pixelToFreqRatio = viewBandwidth / (double)dataWidth;
+            args.bandWidth = wholeBandwidth;
+            args.dataWidth = dataWidth;
+
             onInputProcess.emit(args);
             if (!inputHandled) { processInputs(); }
         }
