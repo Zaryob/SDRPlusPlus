@@ -34,6 +34,7 @@ struct FrequencyBookmark {
 struct WaterfallBookmark {
     std::string listName;
     std::string bookmarkName;
+    std::string color;
     FrequencyBookmark bookmark;
 };
 
@@ -366,6 +367,7 @@ private:
                 }
                 else {
                     config.conf["lists"][editedListName]["showOnWaterfall"] = true;
+                    config.conf["lists"][editedListName]["color"] = "#FFFF00FF";
                     config.conf["lists"][editedListName]["bookmarks"] = json::object();
                 }
                 refreshWaterfallBookmarks(false);
@@ -442,6 +444,7 @@ private:
                 wbm.bookmark.bandwidth = config.conf["lists"][listName]["bookmarks"][bookmarkName]["bandwidth"];
                 wbm.bookmark.mode = config.conf["lists"][listName]["bookmarks"][bookmarkName]["mode"];
                 wbm.bookmark.selected = false;
+                wbm.color = config.conf["lists"][listName]["color"];
                 waterfallBookmarks.push_back(wbm);
             }
         }
@@ -529,7 +532,7 @@ private:
         float lineHeight = ImGui::GetTextLineHeightWithSpacing();
 
         float btnSize = ImGui::CalcTextSize("Rename").x + 8;
-        ImGui::SetNextItemWidth(menuWidth - 24 - (2 * lineHeight) - btnSize);
+        ImGui::SetNextItemWidth(menuWidth - 24 - (4 * lineHeight) - btnSize);
         if (ImGui::Combo(("##freq_manager_list_sel" + _this->name).c_str(), &_this->selectedListId, _this->listNamesTxt.c_str())) {
             _this->loadByName(_this->listNames[_this->selectedListId]);
             config.acquire();
@@ -544,6 +547,27 @@ private:
             _this->renameListOpen = true;
         }
         if (_this->listNames.size() == 0) { style::endDisabled(); }
+        ImGui::SameLine();
+        ImVec4 col(255,255,0,255);
+        if (_this->selectedListName != "") {
+            // Since the color is valid, decode it and set the vfo's color
+            uint8_t r, g, b, a;
+            std::string colstr = config.conf["lists"][_this->selectedListName]["color"];
+            r = std::stoi(colstr.substr(1, 2), NULL, 16);
+            g = std::stoi(colstr.substr(3, 2), NULL, 16);
+            b = std::stoi(colstr.substr(5, 2), NULL, 16);
+            a = std::stoi(colstr.substr(7, 2), NULL, 16);
+            col = ImVec4(r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f);
+           
+            if (ImGui::ColorEdit3(("##bookmark_color_" + _this->selectedListName).c_str(), (float*)&col, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel)) {
+                core::configManager.acquire();
+                char buf[16];
+                sprintf(buf, "#%02X%02X%02X%02X", (int)roundf(col.x * 255), (int)roundf(col.y * 255), (int)roundf(col.z * 255), (int)roundf(col.w * 255));
+                config.conf["lists"][_this->selectedListName]["color"] = buf;
+                core::configManager.release(true);
+                _this->refreshWaterfallBookmarks(false);
+            }
+        }
         ImGui::SameLine();
         if (ImGui::Button(("+##_freq_mgr_add_lst_" + _this->name).c_str(), ImVec2(lineHeight, 0))) {
             // Find new unique default name
@@ -760,9 +784,15 @@ private:
         if (_this->bookmarkDisplayMode == BOOKMARK_DISP_MODE_TOP) {
             for (auto const bm : _this->waterfallBookmarks) {
                 double centerXpos = args.min.x + std::round((bm.bookmark.frequency - args.lowFreq) * args.freqToPixelRatio);
-
+                float r, g, b, a;
+                std::string colstr = bm.color;
+                r = std::stoi(colstr.substr(1, 2), NULL, 16);
+                g = std::stoi(colstr.substr(3, 2), NULL, 16);
+                b = std::stoi(colstr.substr(5, 2), NULL, 16);
+                a = std::stoi(colstr.substr(7, 2), NULL, 16);
+           
                 if (bm.bookmark.frequency >= args.lowFreq && bm.bookmark.frequency <= args.highFreq) {
-                    args.window->DrawList->AddLine(ImVec2(centerXpos, args.min.y), ImVec2(centerXpos, args.max.y), IM_COL32(255, 255, 0, 255));
+                    args.window->DrawList->AddLine(ImVec2(centerXpos, args.min.y), ImVec2(centerXpos, args.max.y), IM_COL32((int)roundf(r), (int)roundf(g), (int)roundf(b), (int)roundf(a)));
                 }
 
                 ImVec2 nameSize = ImGui::CalcTextSize(bm.bookmarkName.c_str());
@@ -772,7 +802,7 @@ private:
                 ImVec2 clampedRectMax = ImVec2(std::clamp<double>(rectMax.x, args.min.x, args.max.x), rectMax.y);
 
                 if (clampedRectMax.x - clampedRectMin.x > 0) {
-                    args.window->DrawList->AddRectFilled(clampedRectMin, clampedRectMax, IM_COL32(255, 255, 0, 255));
+                    args.window->DrawList->AddRectFilled(clampedRectMin, clampedRectMax, IM_COL32((int)roundf(r), (int)roundf(g), (int)roundf(b), (int)roundf(a)));
                 }
                 if (rectMin.x >= args.min.x && rectMax.x <= args.max.x) {
                     args.window->DrawList->AddText(ImVec2(centerXpos - (nameSize.x / 2), args.min.y), IM_COL32(0, 0, 0, 255), bm.bookmarkName.c_str());
@@ -782,9 +812,16 @@ private:
         else if (_this->bookmarkDisplayMode == BOOKMARK_DISP_MODE_BOTTOM) {
             for (auto const bm : _this->waterfallBookmarks) {
                 double centerXpos = args.min.x + std::round((bm.bookmark.frequency - args.lowFreq) * args.freqToPixelRatio);
+                
+                float r, g, b, a;
+                std::string colstr = bm.color;
+                r = std::stoi(colstr.substr(1, 2), NULL, 16);
+                g = std::stoi(colstr.substr(3, 2), NULL, 16);
+                b = std::stoi(colstr.substr(5, 2), NULL, 16);
+                a = std::stoi(colstr.substr(7, 2), NULL, 16);
 
                 if (bm.bookmark.frequency >= args.lowFreq && bm.bookmark.frequency <= args.highFreq) {
-                    args.window->DrawList->AddLine(ImVec2(centerXpos, args.min.y), ImVec2(centerXpos, args.max.y), IM_COL32(255, 255, 0, 255));
+                    args.window->DrawList->AddLine(ImVec2(centerXpos, args.min.y), ImVec2(centerXpos, args.max.y), IM_COL32((int)roundf(r), (int)roundf(g), (int)roundf(b), (int)roundf(a)));
                 }
 
                 ImVec2 nameSize = ImGui::CalcTextSize(bm.bookmarkName.c_str());
@@ -794,7 +831,7 @@ private:
                 ImVec2 clampedRectMax = ImVec2(std::clamp<double>(rectMax.x, args.min.x, args.max.x), rectMax.y);
 
                 if (clampedRectMax.x - clampedRectMin.x > 0) {
-                    args.window->DrawList->AddRectFilled(clampedRectMin, clampedRectMax, IM_COL32(255, 255, 0, 255));
+                    args.window->DrawList->AddRectFilled(clampedRectMin, clampedRectMax, IM_COL32((int)roundf(r), (int)roundf(g), (int)roundf(b), (int)roundf(a)));
                 }
                 if (rectMin.x >= args.min.x && rectMax.x <= args.max.x) {
                     args.window->DrawList->AddText(ImVec2(centerXpos - (nameSize.x / 2), args.max.y - nameSize.y), IM_COL32(0, 0, 0, 255), bm.bookmarkName.c_str());
@@ -1047,6 +1084,7 @@ MOD_EXPORT void _INIT_() {
     def["selectedList"] = "General";
     def["bookmarkDisplayMode"] = BOOKMARK_DISP_MODE_TOP;
     def["lists"]["General"]["showOnWaterfall"] = true;
+    def["lists"]["General"]["color"] = "#FFFF00FF";
     def["lists"]["General"]["bookmarks"] = json::object();
 
     config.setPath(core::args["root"].s() + "/frequency_manager_config.json");
@@ -1064,6 +1102,7 @@ MOD_EXPORT void _INIT_() {
         newList = json::object();
         newList["showOnWaterfall"] = true;
         newList["bookmarks"] = list;
+        newList["color"] = "#FFFF00FF";
         config.conf["lists"][listName] = newList;
     }
     config.release(true);
