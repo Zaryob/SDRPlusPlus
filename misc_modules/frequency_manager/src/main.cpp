@@ -139,7 +139,7 @@ private:
 
         ImGui::OpenPopup(id.c_str());
 
-        char nameBuf[1024];
+        char nameBuf[30];
         strcpy(nameBuf, editedBookmarkName.c_str());
 
         ImVec2 mousePos = ImGui::GetMousePos();
@@ -193,7 +193,7 @@ private:
 
         ImGui::OpenPopup(id.c_str());
 
-        char nameBuf[1024];
+        char nameBuf[30];
         strcpy(nameBuf, editedBookmarkName.c_str());
 
         ImVec2 mousePos = ImGui::GetMousePos();
@@ -260,7 +260,7 @@ private:
         }
         ImGui::OpenPopup(id.c_str());
 
-        char nameBuf[1024];
+        char nameBuf[30];
         strcpy(nameBuf, editedBookmarkName.c_str());
 
         ImVec2 mousePos = ImGui::GetMousePos();
@@ -275,7 +275,7 @@ private:
             ImGui::LeftLabel("Name");
             ImGui::TableSetColumnIndex(1);
             ImGui::SetNextItemWidth(200);
-            if (ImGui::InputText(("##freq_manager_edit_name" + name).c_str(), nameBuf, 1023)) {
+            if (ImGui::InputText(("##freq_manager_edit_name" + name).c_str(), nameBuf, 29)) {
                 editedBookmarkName = nameBuf;
             }
 
@@ -341,7 +341,7 @@ private:
         }
         ImGui::OpenPopup(id.c_str());
 
-        char nameBuf[1024];
+        char nameBuf[30];
         strcpy(nameBuf, editedListName.c_str());
 
         ImVec2 mousePos = ImGui::GetMousePos();
@@ -350,7 +350,7 @@ private:
         if (ImGui::BeginPopupModal(id.c_str(), NULL, ImGuiWindowFlags_NoResize)) {
             ImGui::LeftLabel("Name");
             ImGui::SetNextItemWidth(menuWidth - ImGui::GetCursorPosX());
-            if (ImGui::InputText(("##freq_manager_edit_name" + name).c_str(), nameBuf, 1023)) {
+            if (ImGui::InputText(("##freq_manager_edit_name" + name).c_str(), nameBuf, 29)) {
                 editedListName = nameBuf;
             }
 
@@ -925,7 +925,7 @@ private:
 
                                 double off = ((((double)refCenter / ((double)args.dataWidth / 2.0)) - 1.0) * (args.bandWidth / 2.0)) + args.viewOffset - centerXpos;
                                 off += args.centerFreq;
-                                flog::warn("Bookmark Moved to {0} : {1}", centerXpos, off);
+                                flog::verbose("Bookmark Moved to {0}",  off);
                                 hoveredBookmark.bookmark.frequency = off;
                                 
                                 _this->waterfallBookmarks[hoveredBookmarkIndex] = hoveredBookmark;
