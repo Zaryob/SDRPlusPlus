@@ -193,6 +193,7 @@ void MainWindow::init() {
     sigpath::sourceManager.tune(frequency);
     gui::waterfall.setCenterFrequency(frequency);
     bw = 1.0;
+    contrast = 1.0;
     gui::waterfall.vfoFreqChanged = false;
     gui::waterfall.centerFreqMoved = false;
     gui::waterfall.selectFirstVFO();
@@ -624,6 +625,26 @@ void MainWindow::draw() {
 
     ImGui::NewLine();
 
+    // Contrast slider
+    ImGui::SetCursorPosX((ImGui::GetWindowSize().x / 2.0) - (ImGui::CalcTextSize("Contrast").x / 2.0));
+    ImGui::TextUnformatted("Contrast");
+    ImGui::SetCursorPosX((ImGui::GetWindowSize().x / 2.0) - 10 * style::uiScale);
+    if (ImGui::VSliderFloat("##_8_", wfSliderSize, &contrast, 1.0, 0.0, "")) {
+        double factor = (double)contrast * (double)contrast;
+
+        // Map 0.0 -> 1.0 to 1000.0 -> bandwidth
+        /*
+        double wfBw = gui::waterfall.getBandwidth();
+        double delta = wfBw - 1000.0;
+        double finalBw = std::min<double>(1000.0 + (factor * delta), wfBw);
+
+        gui::waterfall.setViewBandwidth(finalBw);
+        if (vfo != NULL) {
+            gui::waterfall.setViewOffset(vfo->centerOffset); // center vfo on screen
+        }*/
+    }
+
+    ImGui::NewLine();
     // Calculate the offset and range dynamically based on fftMax and fftMin
     float offset = (fftMax + fftMin) / 2.0f;
     float range = fftMax - fftMin;
@@ -632,7 +653,7 @@ void MainWindow::draw() {
     ImGui::SetCursorPosX((ImGui::GetWindowSize().x / 2.0) - (ImGui::CalcTextSize("Offset").x / 2.0));
     ImGui::TextUnformatted("Offset");
     ImGui::SetCursorPosX((ImGui::GetWindowSize().x / 2.0) - 10 * style::uiScale);
-    if (ImGui::VSliderFloat("##_8_", wfSliderSize, &offset, -160.0f, 0.0f, "")) {
+    if (ImGui::VSliderFloat("##_9_", wfSliderSize, &offset, -160.0f, 0.0f, "")) {
         // Recalculate fftMax and fftMin based on the new offset and range
         fftMax = offset + range / 2.0f;
         fftMin = offset - range / 2.0f;
@@ -664,7 +685,7 @@ void MainWindow::draw() {
     ImGui::TextUnformatted("Range");
     ImGui::SetCursorPosX((ImGui::GetWindowSize().x / 2.0) - 10 * style::uiScale);
     ImGui::SetItemUsingMouseWheel();
-    if (ImGui::VSliderFloat("##_9_", wfSliderSize, &range, 10.0f, 160.0f, "")) {
+    if (ImGui::VSliderFloat("##_10_", wfSliderSize, &range, 10.0f, 160.0f, "")) {
         // Recalculate fftMax and fftMin based on the new range and current offset
         fftMax = offset + range / 2.0f;
         fftMin = offset - range / 2.0f;
