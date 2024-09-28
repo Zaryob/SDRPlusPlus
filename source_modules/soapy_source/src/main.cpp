@@ -310,6 +310,7 @@ private:
 
     static void menuDeselected(void* ctx) {
         SoapyModule* _this = (SoapyModule*)ctx;
+        gui::mainWindow.playButtonLocked = false;
         flog::info("SoapyModule '{0}': Menu Deselect!", _this->name);
     }
 
@@ -386,9 +387,11 @@ private:
         SoapyModule* _this = (SoapyModule*)ctx;
 
         // If no device is selected, draw only the refresh button
+        gui::mainWindow.playButtonLocked = _this->devId < 0;
         if (_this->devId < 0) {
             SmGui::FillWidth();
             SmGui::ForceSync();
+
             if (SmGui::Button(CONCAT("Refresh##_dev_select_", _this->name))) {
                 _this->refresh();
                 _this->selectDevice(config.conf["device"]);

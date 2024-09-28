@@ -84,6 +84,7 @@ private:
         sigpath::iqFrontEnd.setBuffering(true);
         //gui::freqSelect.limitFreq = false;
         gui::waterfall.centerFrequencyLocked = false;
+        gui::mainWindow.playButtonLocked = false;
         flog::info("FileSourceModule '{0}': Menu Deselect!", _this->name);
     }
 
@@ -118,6 +119,8 @@ private:
 
         if (_this->fileSelect.render("##file_source_" + _this->name)) {
             if (_this->fileSelect.pathIsValid()) {
+                gui::mainWindow.playButtonLocked = false;
+
                 if (_this->reader != NULL) {
                     _this->reader->close();
                     delete _this->reader;
@@ -145,6 +148,9 @@ private:
                 config.acquire();
                 config.conf["path"] = _this->fileSelect.path;
                 config.release(true);
+            }
+            else {
+                gui::mainWindow.playButtonLocked = true;
             }
         }
 

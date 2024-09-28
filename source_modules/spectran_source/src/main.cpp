@@ -227,6 +227,7 @@ private:
 
     static void menuDeselected(void* ctx) {
         SpectranSourceModule* _this = (SpectranSourceModule*)ctx;
+        gui::mainWindow.playButtonLocked = false;
         flog::info("SpectranSourceModule '{0}': Menu Deselect!", _this->name);
     }
 
@@ -339,7 +340,8 @@ private:
             _this->selectSerial(_this->devList.key(_this->devId));
             core::setInputSampleRate(_this->samplerate.effective);
         }
-        
+        gui::mainWindow.playButtonLocked = _this->devList.empty();
+
         if (SmGui::Combo(CONCAT("##_spectran_sr_", _this->name), &_this->srId, _this->sampleRateList.txt)) {
             _this->samplerate = _this->sampleRateList.value(_this->srId);
             core::setInputSampleRate(_this->samplerate.effective);

@@ -232,6 +232,7 @@ private:
 
     static void menuDeselected(void* ctx) {
         HackRFSourceModule* _this = (HackRFSourceModule*)ctx;
+        gui::mainWindow.playButtonLocked = false;
         flog::info("HackRFSourceModule '{0}': Menu Deselect!", _this->name);
     }
 
@@ -302,6 +303,9 @@ private:
         if (_this->running) { SmGui::BeginDisabled(); }
         SmGui::FillWidth();
         SmGui::ForceSync();
+
+        gui::mainWindow.playButtonLocked = _this->selectedSerial == "";
+
         if (SmGui::Combo(CONCAT("##_hackrf_dev_sel_", _this->name), &_this->devId, _this->devListTxt.c_str())) {
             _this->selectBySerial(_this->devList[_this->devId]);
             core::setInputSampleRate(_this->sampleRate);

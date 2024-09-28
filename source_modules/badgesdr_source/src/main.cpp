@@ -108,6 +108,7 @@ private:
 
     static void menuDeselected(void* ctx) {
         BadgeSDRSourceModule* _this = (BadgeSDRSourceModule*)ctx;
+        gui::mainWindow.playButtonLocked = false;
         flog::info("BadgeSDRSourceModule '{0}': Menu Deselect!", _this->name);
     }
 
@@ -174,6 +175,8 @@ private:
             core::setInputSampleRate(_this->sampleRate);
             // TODO: Save
         }
+
+        gui::mainWindow.playButtonLocked = _this->devices.empty();
 
         SmGui::FillWidth();
         SmGui::ForceSync();

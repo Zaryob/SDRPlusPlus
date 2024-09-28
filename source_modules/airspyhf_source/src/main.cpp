@@ -232,6 +232,7 @@ private:
 
     static void menuDeselected(void* ctx) {
         AirspyHFSourceModule* _this = (AirspyHFSourceModule*)ctx;
+        gui::mainWindow.playButtonLocked = false;
         flog::info("AirspyHFSourceModule '{0}': Menu Deselect!", _this->name);
     }
 
@@ -306,6 +307,8 @@ private:
             }
         }
 
+        gui::mainWindow.playButtonLocked = (_this->selectedSerStr == "");
+
         if (SmGui::Combo(CONCAT("##_airspyhf_sr_sel_", _this->name), &_this->srId, _this->sampleRateListTxt.c_str())) {
             _this->sampleRate = _this->sampleRateList[_this->srId];
             core::setInputSampleRate(_this->sampleRate);
@@ -313,7 +316,7 @@ private:
                 config.acquire();
                 config.conf["devices"][_this->selectedSerStr]["sampleRate"] = _this->sampleRate;
                 config.release(true);
-            }
+                }
         }
 
         SmGui::SameLine();

@@ -81,9 +81,15 @@ namespace sourcemenu {
     void refreshSources() {
         sourceNames = sigpath::sourceManager.getSourceNames();
         sourceNamesTxt.clear();
-        for (auto name : sourceNames) {
-            sourceNamesTxt += name;
-            sourceNamesTxt += '\0';
+        if(sourceNames.size() == 0) {
+            gui::mainWindow.playButtonLocked = true;
+        }
+        else {
+            gui::mainWindow.playButtonLocked = false;
+            for (auto name : sourceNames) {
+                sourceNamesTxt += name;
+                sourceNamesTxt += '\0';
+            }
         }
     }
 

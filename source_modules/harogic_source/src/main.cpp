@@ -190,6 +190,7 @@ private:
 
     static void menuDeselected(void* ctx) {
         HarogicSourceModule* _this = (HarogicSourceModule*)ctx;
+        gui::mainWindow.playButtonLocked = false;
         flog::info("HarogicSourceModule '{0}': Menu Deselect!", _this->name);
     }
 
@@ -311,6 +312,8 @@ private:
             core::setInputSampleRate(_this->sampleRate);
             // TODO: Save
         }
+
+        gui::mainWindow.playButtonLocked = _this->devices.empty();
 
         if (SmGui::Combo(CONCAT("##_harogic_sr_sel_", _this->name), &_this->srId, _this->samplerates.txt)) {
             _this->sampleRate = _this->samplerates.value(_this->srId);
