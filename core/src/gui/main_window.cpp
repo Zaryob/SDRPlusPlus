@@ -178,11 +178,12 @@ void MainWindow::init() {
     core::configManager.acquire();
     fftMin = core::configManager.conf["min"];
     fftMax = core::configManager.conf["max"];
+    fftContrast = core::configManager.conf["contrast"];
     gui::waterfall.setFFTMin(fftMin);
     gui::waterfall.setWaterfallMin(fftMin);
     gui::waterfall.setFFTMax(fftMax);
     gui::waterfall.setWaterfallMax(fftMax);
-
+    gui::waterfall.setContrast((int)std::floor(fftContrast));
     double frequency = core::configManager.conf["frequency"];
 
     showMenu = core::configManager.conf["showMenu"];
@@ -193,7 +194,7 @@ void MainWindow::init() {
     sigpath::sourceManager.tune(frequency);
     gui::waterfall.setCenterFrequency(frequency);
     bw = 1.0;
-    contrast = 1.0;
+    fftContrast =80;
     gui::waterfall.vfoFreqChanged = false;
     gui::waterfall.centerFreqMoved = false;
     gui::waterfall.selectFirstVFO();
@@ -475,7 +476,7 @@ void MainWindow::draw() {
         ImGui::Columns(3, "WindowColumns", false);
         ImGui::SetColumnWidth(0, menuWidth);
         ImGui::SetColumnWidth(1, std::max<int>(winSize.x - menuWidth - (60.0f * style::uiScale), 100.0f * style::uiScale));
-        ImGui::SetColumnWidth(2, 60.0f * style::uiScale);
+        ImGui::SetColumnWidth(2, 100.0f * style::uiScale);
         ImGui::BeginChild("Left Column");
 
         if (gui::menu.draw(firstMenuRender)) {
@@ -536,7 +537,7 @@ void MainWindow::draw() {
         ImGui::Columns(3, "WindowColumns", false);
         ImGui::SetColumnWidth(0, 8 * style::uiScale);
         ImGui::SetColumnWidth(1, winSize.x - ((8 + 60) * style::uiScale));
-        ImGui::SetColumnWidth(2, 60.0f * style::uiScale);
+        ImGui::SetColumnWidth(2, 100.0f * style::uiScale);
     }
 
     // Right Column
@@ -613,10 +614,17 @@ void MainWindow::draw() {
     ImGui::NextColumn();
     ImGui::BeginChild("WaterfallControls");
 
+    // Waterfall control's size calculations
+    float wfSliderHor = 20.0 * style::uiScale;
+    float wfSliderVert = ImGui::GetWindowSize().y / 5.0 - 10.0 * style::uiScale;
+    wfSliderVert = wfSliderVert < 100.0 * style::uiScale ? 100.0 * style::uiScale : wfSliderVert;
+    ImVec2 wfSliderSize(wfSliderHor, wfSliderVert);
+
+    // Zoom slider
     ImGui::SetCursorPosX((ImGui::GetWindowSize().x / 2.0) - (ImGui::CalcTextSize("Zoom").x / 2.0));
     ImGui::TextUnformatted("Zoom");
     ImGui::SetCursorPosX((ImGui::GetWindowSize().x / 2.0) - 10 * style::uiScale);
-    ImVec2 wfSliderSize(20.0 * style::uiScale, 150.0 * style::uiScale);
+
     if (ImGui::VSliderFloat("##_7_", wfSliderSize, &bw, 1.0, 0.0, "")) {
         double factor = (double)bw * (double)bw;
 
@@ -637,19 +645,8 @@ void MainWindow::draw() {
     ImGui::SetCursorPosX((ImGui::GetWindowSize().x / 2.0) - (ImGui::CalcTextSize("Contrast").x / 2.0));
     ImGui::TextUnformatted("Contrast");
     ImGui::SetCursorPosX((ImGui::GetWindowSize().x / 2.0) - 10 * style::uiScale);
-    if (ImGui::VSliderFloat("##_8_", wfSliderSize, &contrast, 1.0, 0.0, "")) {
-        double factor = (double)contrast * (double)contrast;
-
-        // Map 0.0 -> 1.0 to 1000.0 -> bandwidth
-        /*
-        double wfBw = gui::waterfall.getBandwidth();
-        double delta = wfBw - 1000.0;
-        double finalBw = std::min<double>(1000.0 + (factor * delta), wfBw);
-
-        gui::waterfall.setViewBandwidth(finalBw);
-        if (vfo != NULL) {
-            gui::waterfall.setViewOffset(vfo->centerOffset); // center vfo on screen
-        }*/
+    if (ImGui::VSliderFloat("##_8_", wfSliderSize, &fftContrast, 0.0, 160.0, "")) {
+        gui::waterfall.setContrast((int)std::floor(fftContrast));
     }
 
     ImGui::NewLine();

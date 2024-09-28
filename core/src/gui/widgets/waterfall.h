@@ -120,6 +120,9 @@ namespace ImGui {
         void setZoom(double zoomLevel);
         void setOffset(double zoomOffset);
 
+        void setContrast(int contrast);
+        int getContrast();
+
         void autoRange();
 
         void selectFirstVFO();
@@ -289,6 +292,8 @@ namespace ImGui {
         float fftMax;
         float waterfallMin;
         float waterfallMax;
+
+        int waterfallContrast;
 
         //std::vector<std::vector<float>> rawFFTs;
         int rawFFTSize;
