@@ -918,10 +918,12 @@ namespace ImGui {
             doZoom(drawDataStart, drawDataSize, rawFFTSize, dataWidth, &rawFFTs[currentFFTLine * rawFFTSize], latestFFT);
             memmove(&waterfallFb[dataWidth], waterfallFb, dataWidth * (waterfallHeight - 1) * sizeof(uint32_t));
             float pixel;
-            float dataRange = waterfallMax - waterfallMin;
+            float dataRange = (waterfallMax - waterfallMin) + 160 - getContrast();
             for (int j = 0; j < dataWidth; j++) {
                 pixel = (std::clamp<float>(latestFFT[j], waterfallMin, waterfallMax) - waterfallMin) / dataRange;
                 int id = (int)(pixel * (WATERFALL_RESOLUTION - 1));
+                id = id < 0 ? 0 : id;
+                id = id >= WATERFALL_RESOLUTION ? WATERFALL_RESOLUTION - 1 : id;
                 waterfallFb[j] = waterfallPallet[id];
             }
             waterfallUpdate = true;
@@ -992,6 +994,12 @@ namespace ImGui {
             waterfallPallet[i] = ((uint32_t)255 << 24) | ((uint32_t)b << 16) | ((uint32_t)g << 8) | (uint32_t)r;
         }
         updateWaterfallFb();
+    }
+    void WaterFall::setContrast(int contrast) {
+        waterfallContrast=contrast;
+    }
+    int WaterFall::getContrast() {
+        return waterfallContrast;
     }
 
     void WaterFall::autoRange() {
