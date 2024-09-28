@@ -48,6 +48,7 @@ private:
     float fftMin = -70.0;
     float fftMax = 0.0;
     float bw = 8000000;
+    float contrast = 8000000;
     bool playing = false;
     bool showCredits = false;
     std::string audioStreamName = "";
