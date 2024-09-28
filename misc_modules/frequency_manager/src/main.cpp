@@ -215,7 +215,6 @@ private:
                 config.release(true);
                 refreshLists();
                 selectedListId = std::clamp<int>(selectedListId, 0, listNames.size());
-                //_this->bookmarks
                 if (listNames.size() > 0) {
                     loadByName(listNames[selectedListId]);
                 }
@@ -560,6 +559,16 @@ private:
             col = ImVec4(r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f);
            
             if (ImGui::ColorEdit3(("##bookmark_color_" + _this->selectedListName).c_str(), (float*)&col, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel)) {
+                // When color picker is open or being interacted with
+                if (ImGui::IsItemActive() || ImGui::IsItemHovered())
+                {
+                    // Consume mouse input by preventing any input from reaching elements behind
+                    ImGui::GetIO().WantCaptureMouse = true;  // Capture mouse events
+                }
+                else
+                {
+                    ImGui::GetIO().WantCaptureMouse = false; // Release mouse events
+                }
                 core::configManager.acquire();
                 char buf[16];
                 sprintf(buf, "#%02X%02X%02X%02X", (int)roundf(col.x * 255), (int)roundf(col.y * 255), (int)roundf(col.z * 255), (int)roundf(col.w * 255));
@@ -843,7 +852,8 @@ private:
     bool mouseAlreadyDown = false;
     bool mouseClickedInLabel = false;
     bool mouseChangeFreq = false;
-    bool bookmarkChangeRf = false;
+    bool bookmarkChangeFrequency = false;
+    int movingBookmarkIndex=-1;
 
     double referenceXPos=0.0f;
     double referenceYPos=0.0f;
@@ -905,7 +915,7 @@ private:
             if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
                 _this->mouseClickedInLabel = false;
 
-                if (!_this->bookmarkChangeRf) {
+                if (!_this->bookmarkChangeFrequency) {
                     _this->mouseChangeFreq = true;
                 }
             }
@@ -916,19 +926,26 @@ private:
                     _this->moveXPos = xpos;
                 }
                 else {
-                    if (_this->bookmarkChangeRf) {
-                        if (_this->moveXPos != xpos && hoveredBookmarkIndex != -1) {
-
+                    if (_this->bookmarkChangeFrequency) {
+                        if(hoveredBookmarkIndex != -1 && _this->movingBookmarkIndex == -1){
+                            _this->movingBookmarkIndex = hoveredBookmarkIndex;
+                        }
+                        if (_this->moveXPos != xpos && _this->movingBookmarkIndex != -1) {
+                            WaterfallBookmark movingBookmark = _this->waterfallBookmarks[_this->movingBookmarkIndex];
                             int refCenter = _this->moveXPos - args.fftRectMin.x;
                             if (refCenter >= 0 && refCenter < args.dataWidth) {
-                                double centerXpos = args.fftRectMin.x + std::round((hoveredBookmark.bookmark.frequency - args.lowFreq) * args.freqToPixelRatio);
+                                double centerXpos = args.fftRectMin.x + std::round((movingBookmark.bookmark.frequency - args.lowFreq) * args.freqToPixelRatio);
 
                                 double off = ((((double)refCenter / ((double)args.dataWidth / 2.0)) - 1.0) * (args.bandWidth / 2.0)) + args.viewOffset - centerXpos;
                                 off += args.centerFreq;
                                 flog::verbose("Bookmark Moved to {0}",  off);
-                                hoveredBookmark.bookmark.frequency = off;
-                                
-                                _this->waterfallBookmarks[hoveredBookmarkIndex] = hoveredBookmark;
+                                movingBookmark.bookmark.frequency = off;
+                                std::string oldName =_this->selectedListName;
+                                _this->loadByName(movingBookmark.listName);
+                                _this->waterfallBookmarks[_this->movingBookmarkIndex] = movingBookmark;
+                                _this->bookmarks.erase(movingBookmark.bookmarkName);
+                                _this->bookmarks[movingBookmark.bookmarkName] = movingBookmark.bookmark;
+                                _this->saveByName(movingBookmark.listName);
                             }
 
                             _this->moveXPos = xpos;
@@ -936,14 +953,13 @@ private:
                     }
                     else {
                         if (xpos < _this->moveXPos || xpos > _this->moveXPos) {
-                            _this->bookmarkChangeRf = true;
+                            _this->bookmarkChangeFrequency = true;
                             _this->moveXPos = ypos;
-                            flog::warn("Mouse ready to move bookmark");
                         }
                     }
                 }
                 // else{
-                //     _this->bookmarkChangeRf=true;
+                //     _this->bookmarkChangeFrequency=true;
                 // }
             }
 
@@ -963,16 +979,18 @@ private:
 
         // If yes, cancel
         if (_this->mouseAlreadyDown || !inALabel) {
-            _this->mouseChangeFreq =false;
-            return;
+            if(!_this->bookmarkChangeFrequency) {
+                _this->mouseChangeFreq = false;
+                return;
+            }
         }
 
-        if(_this->bookmarkChangeRf){
-            _this->bookmarkChangeRf=false;
-            flog::warn("bookmark freq change");
+        if(_this->bookmarkChangeFrequency){
+            _this->bookmarkChangeFrequency=false;
             _this->referenceXPos=0.f;
             _this->referenceYPos=0.f;
             _this->moveXPos = 0.f;
+            _this->movingBookmarkIndex = -1;
         }
 
         gui::waterfall.inputHandled = true;
@@ -983,22 +1001,24 @@ private:
         }
 
         if(_this->mouseChangeFreq && inALabel){
-            _this->mouseChangeFreq=false;
+            _this->mouseChangeFreq = false;
             _this->referenceXPos=0.f;
             _this->referenceYPos=0.f;
             _this->moveXPos = 0.f;
             applyBookmark(hoveredBookmark.bookmark, gui::waterfall.selectedVFO);
+            _this->movingBookmarkIndex = -1;
         }
-        //if(ImGui::IsMouseClicked(ImGuiMouseButton_Left))
 
-        ImGui::BeginTooltip();
-        ImGui::TextUnformatted(hoveredBookmark.bookmarkName.c_str());
-        ImGui::Separator();
-        ImGui::Text("List: %s", hoveredBookmark.listName.c_str());
-        ImGui::Text("Frequency: %s", utils::formatFreq(hoveredBookmark.bookmark.frequency).c_str());
-        ImGui::Text("Bandwidth: %s", utils::formatFreq(hoveredBookmark.bookmark.bandwidth).c_str());
-        ImGui::Text("Mode: %s", demodModeList[hoveredBookmark.bookmark.mode]);
-        ImGui::EndTooltip();
+        if (hoveredBookmarkIndex != -1) {
+            ImGui::BeginTooltip();
+            ImGui::TextUnformatted(hoveredBookmark.bookmarkName.c_str());
+            ImGui::Separator();
+            ImGui::Text("List: %s", hoveredBookmark.listName.c_str());
+            ImGui::Text("Frequency: %s", utils::formatFreq(hoveredBookmark.bookmark.frequency).c_str());
+            ImGui::Text("Bandwidth: %s", utils::formatFreq(hoveredBookmark.bookmark.bandwidth).c_str());
+            ImGui::Text("Mode: %s", demodModeList[hoveredBookmark.bookmark.mode]);
+            ImGui::EndTooltip();
+        }
     }
 
     json exportedBookmarks;
