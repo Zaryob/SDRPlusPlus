@@ -1,6 +1,7 @@
 #pragma once
 #include <imgui/imgui.h>
 #include <fftw3.h>
+#include <iostream>
 #include <dsp/types.h>
 #include <dsp/stream.h>
 #include <signal_path/vfo_manager.h>
@@ -10,8 +11,11 @@
 #include <gui/tuner.h>
 
 #define WINDOW_FLAGS ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBackground
+#define DOCKSPACE_FLAGS ImGuiDockNodeFlags_PassthruCentralNode
+
 
 class MainWindow {
+
 public:
     void init();
     void draw();
@@ -30,6 +34,7 @@ public:
 
     bool lockWaterfallControls = false;
     bool playButtonLocked = false;
+    bool debugWindow = false;
 
     Event<bool> onPlayStateChange;
 

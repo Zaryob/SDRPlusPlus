@@ -167,9 +167,13 @@ namespace backend {
 
         // Setup Dear ImGui context
         IMGUI_CHECKVERSION();
-        ImGui::CreateContext();
+        ImGuiContext* gui_context = ImGui::CreateContext();
+        gui_context->HoveredIdAllowOverlap = false;
+
         ImGuiIO& io = ImGui::GetIO();
         (void)io;
+        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+        io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
         io.IniFilename = NULL;
 
         // Setup Platform/Renderer bindings
@@ -231,12 +235,13 @@ namespace backend {
     }
 
     int renderLoop() {
+        ImGuiIO& io = ImGui::GetIO();
+        (void)io;
         // Main loop
         while (!glfwWindowShouldClose(window)) {
             glfwPollEvents();
 
             beginFrame();
-            
             if (_maximized != maximized) {
                 _maximized = maximized;
                 core::configManager.acquire();
@@ -280,15 +285,22 @@ namespace backend {
                 core::configManager.release(true);
             }
 
+
             if (winWidth > 0 && winHeight > 0) {
                 ImGui::SetNextWindowPos(ImVec2(0, 0));
                 ImGui::SetNextWindowSize(ImVec2(_winWidth, _winHeight));
                 gui::mainWindow.draw();
             }
 
+            // Update and Render additional Platform Windows
+            if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+            {
+                ImGui::UpdatePlatformWindows();
+                ImGui::RenderPlatformWindowsDefault();
+                // TODO for OpenGL: restore current GL context.
+            }
             render();
         }
-
         return 0;
     }
 

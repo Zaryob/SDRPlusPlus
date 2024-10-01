@@ -53,7 +53,7 @@ void MainWindow::init() {
             continue;
         }
         if (!elem["name"].is_string()) {
-            flog::error("Menu element name isn't a string");
+            flog::error("Menu element 'name' isn't a string");
             continue;
         }
         if (!elem.contains("open")) {
@@ -61,7 +61,7 @@ void MainWindow::init() {
             continue;
         }
         if (!elem["open"].is_boolean()) {
-            flog::error("Menu element name isn't a string");
+            flog::error("Menu element 'open' isn't a boolean");
             continue;
         }
         Menu::MenuOption_t opt;
@@ -463,81 +463,112 @@ void MainWindow::draw() {
     // Process menu keybinds
     displaymenu::checkKeybinds();
 
+    // Create a separator between buttons and the dockspace
+    ImGui::Separator();
+
+    // Get the available space under the buttons
+    ImVec2 availableSpaceForDocking = ImGui::GetContentRegionAvail();
+
+    // Create a child region with a dockspace in the remaining space
+    ImGui::BeginChild("DockingRegion", availableSpaceForDocking, false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+
+    ImGuiID dockspace_id = ImGui::GetID("DockSpace");
+    ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), DOCKSPACE_FLAGS);
+
+
+    if (firstMenuRender) {
+        ImGui::DockBuilderRemoveNode(dockspace_id);
+        ImGui::DockBuilderAddNode(dockspace_id, DOCKSPACE_FLAGS);
+        ImGui::DockBuilderSetNodeSize(dockspace_id, availableSpaceForDocking);
+
+        ImGuiID dockspace_left = ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 0.2f, nullptr, &dockspace_id);
+        ImGui::DockBuilderDockWindow("Waterfall", dockspace_id);
+        ImGui::DockBuilderFinish(dockspace_id);
+
+        ImGuiID dockspace_left_down = ImGui::DockBuilderSplitNode(dockspace_left, ImGuiDir_Down, 0.2f, nullptr, &dockspace_left);
+
+        ImGui::DockBuilderDockWindow("Menu", dockspace_left);
+        ImGui::DockBuilderDockWindow("Debug", dockspace_left_down);
+        ImGui::DockBuilderFinish(dockspace_left);
+
+    }
+
+    ImGui::EndChild();
+
+    ImGui::End(); // Main
+
     // Left Column
-    if (showMenu) {
-        ImGui::Columns(3, "WindowColumns", false);
-        ImGui::SetColumnWidth(0, menuWidth);
-        ImGui::SetColumnWidth(1, std::max<int>(winSize.x - menuWidth - (60.0f * style::uiScale), 100.0f * style::uiScale));
-        ImGui::SetColumnWidth(2, 100.0f * style::uiScale);
-        ImGui::BeginChild("Left Column");
-
-        if (gui::menu.draw(firstMenuRender)) {
-            core::configManager.acquire();
-            json arr = json::array();
-            for (int i = 0; i < gui::menu.order.size(); i++) {
-                arr[i]["name"] = gui::menu.order[i].name;
-                arr[i]["open"] = gui::menu.order[i].open;
-            }
-            core::configManager.conf["menuElements"] = arr;
-
-            // Update enabled and disabled modules
-            for (auto [_name, inst] : core::moduleManager.instances) {
-                if (!core::configManager.conf["moduleInstances"].contains(_name)) { continue; }
-                core::configManager.conf["moduleInstances"][_name]["enabled"] = inst.instance->isEnabled();
-            }
-
-            core::configManager.release(true);
+    ImGui::SetNextWindowSizeConstraints(ImVec2(300 * style::uiScale, 300* style::uiScale), ImVec2(INFINITY, INFINITY));
+    ImGui::Begin("Menu", NULL);
+    ImGui::BeginChild("Menu Child");
+    if (gui::menu.draw(firstMenuRender)) {
+        core::configManager.acquire();
+        json arr = json::array();
+        for (int i = 0; i < gui::menu.order.size(); i++) {
+            arr[i]["name"] = gui::menu.order[i].name;
+            arr[i]["open"] = gui::menu.order[i].open;
         }
-        if (startedWithMenuClosed) {
-            startedWithMenuClosed = false;
-        }
-        else {
-            firstMenuRender = false;
+        core::configManager.conf["menuElements"] = arr;
+
+        // Update enabled and disabled modules
+        for (auto [_name, inst] : core::moduleManager.instances) {
+            if (!core::configManager.conf["moduleInstances"].contains(_name)) { continue; }
+            core::configManager.conf["moduleInstances"][_name]["enabled"] = inst.instance->isEnabled();
         }
 
-        if (ImGui::CollapsingHeader("Debug")) {
-            ImGui::Text("Frame time: %.3f ms/frame", ImGui::GetIO().DeltaTime * 1000.0f);
-            ImGui::Text("Framerate: %.1f FPS", ImGui::GetIO().Framerate);
-            ImGui::Text("Center Frequency: %.0f Hz", gui::waterfall.getCenterFrequency());
-            ImGui::Text("Source name: %s", sourceName.c_str());
-            ImGui::Checkbox("Show demo window", &demoWindow);
-            ImGui::Text("ImGui version: %s", ImGui::GetVersion());
-
-            // ImGui::Checkbox("Bypass buffering", &sigpath::iqFrontEnd.inputBuffer.bypass);
-
-            // ImGui::Text("Buffering: %d", (sigpath::iqFrontEnd.inputBuffer.writeCur - sigpath::iqFrontEnd.inputBuffer.readCur + 32) % 32);
-
-            if (ImGui::Button("Test Bug")) {
-                flog::error("Will this make the software crash?");
-            }
-
-            if (ImGui::Button("Testing something")) {
-                gui::menu.order[0].open = true;
-                firstMenuRender = true;
-            }
-
-            ImGui::Checkbox("WF Single Click", &gui::waterfall.VFOMoveSingleClick);
-            ImGui::Checkbox("Lock Menu Order", &gui::menu.locked);
-
-            ImGui::Spacing();
-        }
-
-        ImGui::EndChild();
+        core::configManager.release(true);
+    }
+    if (startedWithMenuClosed) {
+        startedWithMenuClosed = false;
     }
     else {
-        // When hiding the menu bar
-        ImGui::Columns(3, "WindowColumns", false);
-        ImGui::SetColumnWidth(0, 8 * style::uiScale);
-        ImGui::SetColumnWidth(1, winSize.x - ((8 + 60) * style::uiScale));
-        ImGui::SetColumnWidth(2, 100.0f * style::uiScale);
+        firstMenuRender = false;
     }
+
+    ImGui::EndChild();
+
+    ImGui::Begin("Debug", &debugWindow);
+        ImGui::Text("Frame time: %.3f ms/frame", ImGui::GetIO().DeltaTime * 1000.0f);
+        ImGui::Text("Framerate: %.1f FPS", ImGui::GetIO().Framerate);
+        ImGui::Text("Center Frequency: %.0f Hz", gui::waterfall.getCenterFrequency());
+        ImGui::Text("Source name: %s", sourceName.c_str());
+        ImGui::Checkbox("Show demo window", &demoWindow);
+        ImGui::Text("ImGui version: %s", ImGui::GetVersion());
+
+        // ImGui::Checkbox("Bypass buffering", &sigpath::iqFrontEnd.inputBuffer.bypass);
+
+        // ImGui::Text("Buffering: %d", (sigpath::iqFrontEnd.inputBuffer.writeCur - sigpath::iqFrontEnd.inputBuffer.readCur + 32) % 32);
+
+        if (ImGui::Button("Test Bug")) {
+            flog::error("Will this make the software crash?");
+        }
+
+        if (ImGui::Button("Testing something")) {
+            gui::menu.order[0].open = true;
+            firstMenuRender = true;
+        }
+
+        ImGui::Checkbox("WF Single Click", &gui::waterfall.VFOMoveSingleClick);
+        ImGui::Checkbox("Lock Menu Order", &gui::menu.locked);
+
+        ImGui::Spacing();
+
+    ImGui::End();
 
     // Right Column
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-    ImGui::NextColumn();
+    //ImGui::NextColumn();
     ImGui::PopStyleVar();
 
-    ImGui::BeginChild("Waterfall");
+    ImGui::End(); // Menu
+
+    ImGui::Begin("Waterfall", NULL);
+    ImVec2 availableSpaceInWaterfall = ImGui::GetContentRegionAvail();
+    ImGui::Columns(2, "WaterfallColumns", false);
+    ImGui::SetColumnWidth(0, std::max<int>(availableSpaceInWaterfall.x - (40.0f * style::uiScale), 100.0f * style::uiScale));
+    ImGui::SetColumnWidth(1, 40.0f * style::uiScale);
+
+    ImGui::BeginChild("FFT Child");
 
     gui::waterfall.draw();
 
@@ -713,7 +744,7 @@ void MainWindow::draw() {
     gui::waterfall.setWaterfallMin(fftMin);
     gui::waterfall.setWaterfallMax(fftMax);
 
-    ImGui::End();
+    ImGui::End(); // Waterfall
 
     if (showCredits) {
         credits::show();

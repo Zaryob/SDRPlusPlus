@@ -258,10 +258,9 @@ namespace ImGui {
 
         bool mouseHovered, mouseHeld;
         bool mouseClicked = ImGui::ButtonBehavior(ImRect(fftAreaMin, wfMax), GetID("WaterfallID"), &mouseHovered, &mouseHeld,
-                                                  ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_PressedOnClick);
+                                                  ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight | ImGuiButtonFlags_PressedOnClick);
 
-        bool mouseRClicked = ImGui::ButtonBehavior(ImRect(fftAreaMin, wfMax), GetID("WaterfallID"), &mouseHovered, &mouseHeld,
-                                                  ImGuiButtonFlags_MouseButtonRight | ImGuiButtonFlags_PressedOnClick);
+        auto rec = ImRect(fftAreaMin, wfMax);
 
         mouseInFFTResize = (dragOrigin.x > widgetPos.x && dragOrigin.x < widgetPos.x + widgetSize.x && dragOrigin.y >= widgetPos.y + newFFTAreaHeight - (2.0f * style::uiScale) && dragOrigin.y <= widgetPos.y + newFFTAreaHeight + (2.0f * style::uiScale));
         mouseInFreq = IS_IN_AREA(dragOrigin, freqAreaMin, freqAreaMax);
@@ -308,59 +307,59 @@ namespace ImGui {
         }
 
         // If mouse was clicked inside the central part, check what was clicked
-        if (mouseRClicked && !targetFound) {
-            for (auto const& [name, _vfo] : vfos) {
-                if (mouseInFFT || mouseInFreq) {
-                    int refCenter = mousePos.x - fftAreaMin.x;
-                    if (refCenter >= 0 && refCenter < dataWidth) {
-                        double off = ((((double)refCenter / ((double)dataWidth / 2.0)) - 1.0) * (viewBandwidth / 2.0)) + viewOffset;
-                        off += centerFreq;
-                        onAddBookmark.emit(off);
+        if (mouseClicked && !targetFound) {
+            if (IsMouseClicked(ImGuiMouseButton_Right)) {
+                for (auto const& [name, _vfo] : vfos) {
+                    if (mouseInFFT || mouseInFreq) {
+                        int refCenter = mousePos.x - fftAreaMin.x;
+                        if (refCenter >= 0 && refCenter < dataWidth) {
+                            double off = ((((double)refCenter / ((double)dataWidth / 2.0)) - 1.0) * (viewBandwidth / 2.0)) + viewOffset;
+                            off += centerFreq;
+                            onAddBookmark.emit(off);
+                        }
                     }
+                }
+            }
+            else  {
+                mouseDownPos = mousePos;
+                // First, check if a VFO border was selected
+                for (auto const& [name, _vfo] : vfos) {
+                    if (_vfo->bandwidthLocked) { continue; }
+                    if (_vfo->rectMax.x - _vfo->rectMin.x < 10) { continue; }
+                    bool resizing = false;
+                    if (_vfo->reference != REF_LOWER) {
+                        if (IS_IN_AREA(mousePos, _vfo->lbwSelMin, _vfo->lbwSelMax)) { resizing = true; }
+                        else if (IS_IN_AREA(mousePos, _vfo->wfLbwSelMin, _vfo->wfLbwSelMax)) {
+                            resizing = true;
+                        }
+                    }
+                    if (_vfo->reference != REF_UPPER) {
+                        if (IS_IN_AREA(mousePos, _vfo->rbwSelMin, _vfo->rbwSelMax)) { resizing = true; }
+                        else if (IS_IN_AREA(mousePos, _vfo->wfRbwSelMin, _vfo->wfRbwSelMax)) {
+                            resizing = true;
+                        }
+                    }
+                    if (!resizing) { continue; }
+                    relatedVfo = _vfo;
+                    vfoBorderSelect = true;
+                    targetFound = true;
+                    break;
+                }
+
+                // Next, check if a VFO was selected
+                if (!targetFound && hoveredVFOName != "") {
+                    selectedVFO = hoveredVFOName;
+                    selectedVFOChanged = true;
+                    targetFound = true;
+                    return;
+                }
+
+                // Now, check frequency scale
+                if (!targetFound && mouseInFreq) {
+                    freqScaleSelect = true;
                 }
             }
         }
-        else if (mouseClicked && !targetFound) {
-            mouseDownPos = mousePos;
-
-            // First, check if a VFO border was selected
-            for (auto const& [name, _vfo] : vfos) {
-                if (_vfo->bandwidthLocked) { continue; }
-                if (_vfo->rectMax.x - _vfo->rectMin.x < 10) { continue; }
-                bool resizing = false;
-                if (_vfo->reference != REF_LOWER) {
-                    if (IS_IN_AREA(mousePos, _vfo->lbwSelMin, _vfo->lbwSelMax)) { resizing = true; }
-                    else if (IS_IN_AREA(mousePos, _vfo->wfLbwSelMin, _vfo->wfLbwSelMax)) {
-                        resizing = true;
-                    }
-                }
-                if (_vfo->reference != REF_UPPER) {
-                    if (IS_IN_AREA(mousePos, _vfo->rbwSelMin, _vfo->rbwSelMax)) { resizing = true; }
-                    else if (IS_IN_AREA(mousePos, _vfo->wfRbwSelMin, _vfo->wfRbwSelMax)) {
-                        resizing = true;
-                    }
-                }
-                if (!resizing) { continue; }
-                relatedVfo = _vfo;
-                vfoBorderSelect = true;
-                targetFound = true;
-                break;
-            }
-
-            // Next, check if a VFO was selected
-            if (!targetFound && hoveredVFOName != "") {
-                selectedVFO = hoveredVFOName;
-                selectedVFOChanged = true;
-                targetFound = true;
-                return;
-            }
-
-            // Now, check frequency scale
-            if (!targetFound && mouseInFreq) {
-                freqScaleSelect = true;
-            }
-        }
-
         // If the FFT resize bar was selected, resize FFT accordingly
         if (fftResizeSelect) {
             ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
