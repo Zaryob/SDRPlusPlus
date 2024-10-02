@@ -25,6 +25,7 @@
 #include <signal_path/source.h>
 #include <gui/dialogs/loading_screen.h>
 #include <gui/colormaps.h>
+#include <gui/layout.h>
 #include <gui/widgets/snr_meter.h>
 #include <gui/tuner.h>
 
@@ -475,22 +476,26 @@ void MainWindow::draw() {
     ImGuiID dockspace_id = ImGui::GetID("DockSpace");
     ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), DOCKSPACE_FLAGS);
 
-
     if (firstMenuRender) {
-        ImGui::DockBuilderRemoveNode(dockspace_id);
-        ImGui::DockBuilderAddNode(dockspace_id, DOCKSPACE_FLAGS);
-        ImGui::DockBuilderSetNodeSize(dockspace_id, availableSpaceForDocking);
 
-        ImGuiID dockspace_left = ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 0.2f, nullptr, &dockspace_id);
-        ImGui::DockBuilderDockWindow("Waterfall", dockspace_id);
+        // Remove any existing dockspace and prepare for a new layout
+        ImGui::DockBuilderRemoveNode(dockspace_id); // Clear out existing dockspace
+        ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_None); // Add the main dockspace
+
+        // Rebuild the layout from the deserialized tree
+        layout::createDockLayoutFromJson(dockspace_id, "dock_layout.json");
+
+        // Finalize the docking layout
         ImGui::DockBuilderFinish(dockspace_id);
-
-        ImGuiID dockspace_left_down = ImGui::DockBuilderSplitNode(dockspace_left, ImGuiDir_Down, 0.2f, nullptr, &dockspace_left);
-
-        ImGui::DockBuilderDockWindow("Menu", dockspace_left);
-        ImGui::DockBuilderDockWindow("Debug", dockspace_left_down);
-        ImGui::DockBuilderFinish(dockspace_left);
-
+    }
+    else{
+        if(ImGui::IsKeyPressed(ImGuiKey_F12)){
+            saveDockLayout=false;
+            ImGuiContext& g = *GImGui;
+            ImGuiID id = ImGui::GetID("DockSpace");
+            ImGuiDockNode* node = ImGui::DockContextFindNodeByID(&g, id);
+            layout::printAllDockNodesAsJson(node, "dock_layout.json");
+        }
     }
 
     ImGui::EndChild();
