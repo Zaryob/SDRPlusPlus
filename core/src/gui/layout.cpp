@@ -60,7 +60,7 @@ DockNodeInfo deserializeDockNode(const json& j)
     // Deserialize the windows associated with the node
     if (j.contains("Windows")) {
         for (const auto& window : j["Windows"]) {
-            nodeInfo.windows.push_back(window["WindowName"].get<std::string>());
+            nodeInfo.windows.push_back({window["WindowID"].get<ImGuiID>(),window["WindowName"].get<std::string>()});
         }
     }
 
@@ -75,53 +75,50 @@ DockNodeInfo deserializeDockNode(const json& j)
     return nodeInfo;
 }
 
-void createDockFromInfo(ImGuiID dockspaceID, const DockNodeInfo& info, int child_num)
+void createDockFromInfo(ImGuiID parentId, const DockNodeInfo& info)
 {
+    ImGuiID nodeId = info.nodeID;
+    ImGuiContext& g = *GImGui;
+    ImGuiDockNode* node = ImGui::DockContextFindNodeByID(&g, nodeId);
+    ImGuiDockNode* p_node = ImGui::DockContextFindNodeByID(&g, parentId);
+    node->Size = info.size;
+    node->State = (ImGuiDockNodeState)info.state;
+    node->SplitAxis = (ImGuiAxis)info.splitAxis;
+    node->LocalFlags = info.localFlags;
+    node->SharedFlags = info.sharedFlags;
+    node->MergedFlags = info.mergedFlags;
+    node->ParentNode = p_node;
+    node->Windows.clear();
+
+    for (const auto& window : info.windows) {
+        ImGui::DockBuilderDockWindow(window.windowName.c_str(), window.windowID);
+    }
     // Set up the dock node (starting with the dockspace root node)
-    if (info.child[0] != nullptr || info.child[1] != nullptr) {
+    if (info.child[0] != nullptr && info.child[1] != nullptr) {
         // Split the dock node if it has children
-        ImGuiID nodeID = info.child[0] ? info.child[0]->nodeID : 0;
-        ImGuiID parentID =info.nodeID;
-        ImGuiDir splitDir;
-        float splitRatio = 0.5f;
+        ImGuiID leftNodeId = info.child[0]->nodeID;
+        ImGuiID rightNodeId = info.child[1]->nodeID;
 
-        if(info.splitAxis == -1) {
-            splitDir = ImGuiDir_None;
-        }
-        else if(child_num == 0){
-            splitDir = (ImGuiDir)(child_num + 2 * info.splitAxis);
+        ImGui::DockBuilderAddNode(leftNodeId);
+        ImGuiDockNode* lnode = ImGui::DockContextFindNodeByID(&g, leftNodeId);
 
-        }
-        else{
-            splitDir = (ImGuiDir)(child_num + 2 * info.splitAxis);
+        ImGui::DockBuilderAddNode(rightNodeId);
+        ImGuiDockNode* rnode = ImGui::DockContextFindNodeByID(&g, rightNodeId);
 
-        }
-        if(info.splitAxis==0) {
-            splitRatio = info.child[0]->size.x / (info.child[0]->size.x + info.child[1]->size.x);
-        }
-        else
-        {
-            splitRatio = info.child[0]->size.y / (info.child[0]->size.y + info.child[1]->size.y);
-        }
-        ImGui::DockBuilderSplitNode(info.nodeID, splitDir, splitRatio,
-                                    &nodeID, &parentID);
+        node->ChildNodes[0] = lnode;
+        node->ChildNodes[1] = rnode;
 
         // Recursively handle child nodes
         if (info.child[0]) {
-            createDockFromInfo(dockspaceID, *info.child[0], 0);
+            createDockFromInfo(info.nodeID, *info.child[0]);
         }
         if (info.child[1]) {
-            createDockFromInfo(dockspaceID, *info.child[1], 1);
-        }
-    } else {
-        // If the node has no children, dock the windows
-        for (const auto& window_name : info.windows) {
-            ImGui::DockBuilderDockWindow(window_name.c_str(), info.nodeID);
+            createDockFromInfo(info.nodeID, *info.child[1]);
         }
     }
 }
 
-void layout::createDockLayoutFromJson(ImGuiID dockspaceID, std::string filename) {
+void layout::createDockLayoutFromJson(ImGuiID& dockspaceID, std::string filename) {
     // Parse the JSON
     // Open the JSON file
     std::ifstream input_file(filename);
@@ -137,18 +134,27 @@ void layout::createDockLayoutFromJson(ImGuiID dockspaceID, std::string filename)
     // Deserialize root node
     DockNodeInfo root_node_info = deserializeDockNode(layout_json);
 
-    if(root_node_info.nodeID != dockspaceID) {
-        // Remove any existing dockspace and prepare for a new layout
-        ImGuiID dockspace_id = root_node_info.nodeID ;
-        ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
-
-        ImGui::DockBuilderRemoveNode(dockspace_id); // Clear out existing dockspace
-        ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_None); // Add the main dockspace
-        dockspaceID = dockspace_id;
-
+    // Remove any existing dockspace and prepare for a new layout
+    if(dockspaceID != root_node_info.nodeID) {
+        ImGui::DockBuilderRemoveNode(dockspaceID); // Clear out existing dockspace
     }
+
+    ImGuiID dockspace_id = root_node_info.nodeID ;
+    ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode );
+    ImGui::DockBuilderRemoveNode(dockspace_id); // Clear out existing dockspace
+
+    ImGui::DockBuilderRemoveNode(dockspace_id); // Clear out existing dockspace
+    ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_None); // Add the main dockspace
+
+    dockspaceID = dockspace_id;
+    ImGui::DockBuilderFinish(dockspace_id);
+
+    std::cout<<"DOCKBUILD"<<std::endl;
+
     // Rebuild the layout from the deserialized tree
-    createDockFromInfo(dockspaceID, root_node_info, 0);
+    createDockFromInfo(dockspaceID, root_node_info);
+    std::cout<<"DOCKBUILD2"<<std::endl;
+
 
 }
 

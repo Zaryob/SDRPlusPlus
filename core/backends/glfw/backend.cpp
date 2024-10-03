@@ -301,6 +301,10 @@ namespace backend {
             }
             render();
         }
+        size_t ini_data_size = 0;
+        const char* ini_data = ImGui::SaveIniSettingsToMemory(&ini_data_size);
+        std::cout<<ini_data<<std::endl;
+
         return 0;
     }
 

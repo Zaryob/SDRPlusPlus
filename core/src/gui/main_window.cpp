@@ -472,24 +472,20 @@ void MainWindow::draw() {
 
     // Create a child region with a dockspace in the remaining space
     ImGui::BeginChild("DockingRegion", availableSpaceForDocking, false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
-
-    ImGuiID dockspace_id = ImGui::GetID("DockSpace");
-    ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), DOCKSPACE_FLAGS);
-
     if (firstMenuRender) {
 
-        // Remove any existing dockspace and prepare for a new layout
-        ImGui::DockBuilderRemoveNode(dockspace_id); // Clear out existing dockspace
-        ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_None); // Add the main dockspace
-
+        std::cout<<"DOCKBUILD_S"<<std::endl;
         // Rebuild the layout from the deserialized tree
         layout::createDockLayoutFromJson(dockspace_id, "dock_layout.json");
-
         // Finalize the docking layout
-        ImGui::DockBuilderFinish(dockspace_id);
+
     }
     else{
-        if(ImGui::IsKeyPressed(ImGuiKey_F12)){
+        std::cout<<"DOCKBUILD_Q"<<std::endl;
+        std::cout<<dockspace_id<<std::endl;
+        ImGui::DockSpace(dockspace_id, availableSpaceForDocking, DOCKSPACE_FLAGS);
+
+        if(saveDockLayout || ImGui::IsKeyPressed(ImGuiKey_F12)){
             saveDockLayout=false;
             ImGuiContext& g = *GImGui;
             ImGuiID id = ImGui::GetID("DockSpace");
@@ -526,7 +522,7 @@ void MainWindow::draw() {
     if (startedWithMenuClosed) {
         startedWithMenuClosed = false;
     }
-    else {
+    if(firstMenuRender) {
         firstMenuRender = false;
     }
 
