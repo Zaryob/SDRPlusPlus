@@ -472,20 +472,39 @@ void MainWindow::draw() {
 
     // Create a child region with a dockspace in the remaining space
     ImGui::BeginChild("DockingRegion", availableSpaceForDocking, false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+
+
     if (firstMenuRender) {
 
-        std::cout<<"DOCKBUILD_S"<<std::endl;
+
+
         // Rebuild the layout from the deserialized tree
-        layout::createDockLayoutFromJson(dockspace_id, "dock_layout.json");
+        layout::createDockLayoutFromJson(dockspace_id, availableSpaceForDocking, "dock_layout.json");
+
         // Finalize the docking layout
 
+        /*
+        TODO: Add this as a backup in case the layout file is missing
+
+        ImGui::DockBuilderRemoveNode(dockspace_id);
+        ImGui::DockBuilderAddNode(dockspace_id, DOCKSPACE_FLAGS);
+        ImGui::DockBuilderSetNodeSize(dockspace_id, availableSpaceForDocking);
+
+        ImGuiID dockspace_left = ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 0.2f, nullptr, &dockspace_id);
+        ImGui::DockBuilderDockWindow("Waterfall", dockspace_id);
+        ImGui::DockBuilderFinish(dockspace_id);
+
+        ImGuiID dockspace_left_down = ImGui::DockBuilderSplitNode(dockspace_left, ImGuiDir_Down, 0.2f, nullptr, &dockspace_left);
+
+        ImGui::DockBuilderDockWindow("Menu", dockspace_left);
+        ImGui::DockBuilderDockWindow("Debug", dockspace_left_down);
+        ImGui::DockBuilderFinish(dockspace_left);
+        */
     }
     else{
-        std::cout<<"DOCKBUILD_Q"<<std::endl;
-        std::cout<<dockspace_id<<std::endl;
-        ImGui::DockSpace(dockspace_id, availableSpaceForDocking, DOCKSPACE_FLAGS);
+        ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), DOCKSPACE_FLAGS);
 
-        if(saveDockLayout || ImGui::IsKeyPressed(ImGuiKey_F12)){
+        if(ImGui::IsKeyPressed(ImGuiKey_F12)){
             saveDockLayout=false;
             ImGuiContext& g = *GImGui;
             ImGuiID id = ImGui::GetID("DockSpace");
@@ -522,7 +541,7 @@ void MainWindow::draw() {
     if (startedWithMenuClosed) {
         startedWithMenuClosed = false;
     }
-    if(firstMenuRender) {
+    else {
         firstMenuRender = false;
     }
 

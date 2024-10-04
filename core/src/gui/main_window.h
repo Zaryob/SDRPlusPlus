@@ -36,14 +36,12 @@ public:
     bool playButtonLocked = false;
     bool debugWindow = false;
     bool saveDockLayout = false;
-
     Event<bool> onPlayStateChange;
 
 private:
     static void vfoAddedHandler(VFOManager::VFO* vfo, void* ctx);
 
-    ImGuiID dockspace_id;
-
+    ImGuiID dockspace_id=0;
     // FFT Variables
     int fftSize = 8192 * 8;
     std::mutex fft_mtx;

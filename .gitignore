@@ -19,3 +19,4 @@ android/deps
 android/app/assets
 out/
 cmake-build-debug/
+CMakeLists.txt.user

@@ -7,8 +7,11 @@
 #include <utils/flog.h>
 #include <fstream>
 #include <iostream>
+#include <map>
 
 using json = nlohmann::json;
+
+std::map<ImGuiID, ImGuiID> dictionary;
 
 json serializeDockNode(ImGuiDockNode* node)
 {
@@ -60,7 +63,7 @@ DockNodeInfo deserializeDockNode(const json& j)
     // Deserialize the windows associated with the node
     if (j.contains("Windows")) {
         for (const auto& window : j["Windows"]) {
-            nodeInfo.windows.push_back({window["WindowID"].get<ImGuiID>(),window["WindowName"].get<std::string>()});
+            nodeInfo.windows.push_back(window["WindowName"].get<std::string>());
         }
     }
 
@@ -75,52 +78,71 @@ DockNodeInfo deserializeDockNode(const json& j)
     return nodeInfo;
 }
 
-void createDockFromInfo(ImGuiID parentId, const DockNodeInfo& info)
+void createDockFromInfo(ImGuiID dockspaceID, const DockNodeInfo& info)
 {
-    ImGuiID nodeId = info.nodeID;
-    ImGuiContext& g = *GImGui;
-    ImGuiDockNode* node = ImGui::DockContextFindNodeByID(&g, nodeId);
-    ImGuiDockNode* p_node = ImGui::DockContextFindNodeByID(&g, parentId);
-    node->Size = info.size;
-    node->State = (ImGuiDockNodeState)info.state;
-    node->SplitAxis = (ImGuiAxis)info.splitAxis;
-    node->LocalFlags = info.localFlags;
-    node->SharedFlags = info.sharedFlags;
-    node->MergedFlags = info.mergedFlags;
-    node->ParentNode = p_node;
-    node->Windows.clear();
-
-    for (const auto& window : info.windows) {
-        ImGui::DockBuilderDockWindow(window.windowName.c_str(), window.windowID);
-    }
     // Set up the dock node (starting with the dockspace root node)
-    if (info.child[0] != nullptr && info.child[1] != nullptr) {
+    if (info.child[0] != nullptr || info.child[1] != nullptr) {
         // Split the dock node if it has children
-        ImGuiID leftNodeId = info.child[0]->nodeID;
-        ImGuiID rightNodeId = info.child[1]->nodeID;
+        ImGuiID nodeID = info.nodeID;
+        ImGuiID leftID = info.child[0]->nodeID;
+        ImGuiID rightID = info.child[1]->nodeID;
+        if(dictionary.size() != 0){
+            nodeID=dictionary[nodeID];
+        }
 
-        ImGui::DockBuilderAddNode(leftNodeId);
-        ImGuiDockNode* lnode = ImGui::DockContextFindNodeByID(&g, leftNodeId);
+        ImGuiDir splitDir;
+        float splitRatio = 0.5f;
 
-        ImGui::DockBuilderAddNode(rightNodeId);
-        ImGuiDockNode* rnode = ImGui::DockContextFindNodeByID(&g, rightNodeId);
+        if(info.splitAxis == -1) {
+            splitDir = ImGuiDir_None;
+        }
+        else if(info.splitAxis == 0){
+            splitDir = (ImGuiDir)(info.splitAxis);
 
-        node->ChildNodes[0] = lnode;
-        node->ChildNodes[1] = rnode;
+        }
+        else{
+            splitDir = (ImGuiDir)(2 * info.splitAxis);
+
+        }
+        if(info.splitAxis==0) {
+            splitRatio = info.child[0]->size.x / (info.child[0]->size.x + info.child[1]->size.x);
+        }
+        else
+        {
+            splitRatio = info.child[0]->size.y / (info.child[0]->size.y + info.child[1]->size.y);
+        }
+        // Split the main dockspace node into left and right nodes
+
+        ImGui::DockBuilderSplitNode(nodeID, splitDir, splitRatio, &leftID, &rightID);
+
+        dictionary[info.child[0]->nodeID] = leftID;
+        dictionary[info.child[1]->nodeID] = rightID;
+
+        //ImGui::DockBuilderSplitNode(info.nodeID, splitDir, splitRatio,
+        //                            &nodeID, &parentID);
+        size_t ini_data_size = 0;
+        const char* ini_data = ImGui::SaveIniSettingsToMemory(&ini_data_size);
+        std::cout<<"---------------"<<std::endl<<"STD:"<<std::endl<<ini_data<<std::endl<<"---------------"<<std::endl;
 
         // Recursively handle child nodes
         if (info.child[0]) {
-            createDockFromInfo(info.nodeID, *info.child[0]);
+            createDockFromInfo(dockspaceID, *info.child[0]);
         }
         if (info.child[1]) {
-            createDockFromInfo(info.nodeID, *info.child[1]);
+            createDockFromInfo(dockspaceID, *info.child[1]);
+        }
+       } else {
+        // If the node has no children, dock the windows
+        for (const auto& window_name : info.windows) {
+            ImGui::DockBuilderDockWindow(window_name.c_str(), dictionary[info.nodeID]);
         }
     }
 }
 
-void layout::createDockLayoutFromJson(ImGuiID& dockspaceID, std::string filename) {
+void layout::createDockLayoutFromJson(ImGuiID& dockspaceID, ImVec2 availableSpaceForDocking, std::string filename) {
     // Parse the JSON
     // Open the JSON file
+    dictionary.clear();
     std::ifstream input_file(filename);
     if (!input_file.is_open()) {
         flog::error("Could not open file: {0}\n", filename.c_str());
@@ -133,28 +155,21 @@ void layout::createDockLayoutFromJson(ImGuiID& dockspaceID, std::string filename
 
     // Deserialize root node
     DockNodeInfo root_node_info = deserializeDockNode(layout_json);
+    // Remove any existing dockspace and prepare for a new layout
+    ImGui::DockBuilderRemoveNode(dockspaceID); // Clear out existing dockspace
 
     // Remove any existing dockspace and prepare for a new layout
-    if(dockspaceID != root_node_info.nodeID) {
-        ImGui::DockBuilderRemoveNode(dockspaceID); // Clear out existing dockspace
-    }
-
     ImGuiID dockspace_id = root_node_info.nodeID ;
-    ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode );
-    ImGui::DockBuilderRemoveNode(dockspace_id); // Clear out existing dockspace
+    ImGui::DockSpace(dockspace_id, availableSpaceForDocking, ImGuiDockNodeFlags_None);
 
     ImGui::DockBuilderRemoveNode(dockspace_id); // Clear out existing dockspace
     ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_None); // Add the main dockspace
-
     dockspaceID = dockspace_id;
-    ImGui::DockBuilderFinish(dockspace_id);
 
-    std::cout<<"DOCKBUILD"<<std::endl;
 
     // Rebuild the layout from the deserialized tree
-    createDockFromInfo(dockspaceID, root_node_info);
-    std::cout<<"DOCKBUILD2"<<std::endl;
-
+    createDockFromInfo(dockspace_id, root_node_info);
+    ImGui::DockBuilderFinish(dockspace_id);
 
 }
 

@@ -8,11 +8,6 @@
 #include <vector>
 #include <string>
 
-struct DockWindow {
-    ImGuiID windowID;
-    std::string windowName;
-};
-
 struct DockNodeInfo {
     ImGuiID nodeID;
     int splitAxis;
@@ -21,11 +16,11 @@ struct DockNodeInfo {
     ImGuiDockNodeFlags localFlags;
     ImGuiDockNodeFlags mergedFlags;
     int state;
-    std::vector<DockWindow> windows;
+    std::vector<std::string> windows;
     DockNodeInfo* child[2] = { nullptr, nullptr }; // To hold child nodes
 };
 
 namespace layout {
     void printAllDockNodesAsJson(ImGuiDockNode* node, std::string filename);
-    void createDockLayoutFromJson(ImGuiID& dockspaceID, std::string layoutJson);
+    void createDockLayoutFromJson(ImGuiID& dockspaceID,ImVec2 availableSpaceForDocking, std::string layoutJson);
 }
