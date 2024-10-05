@@ -6,7 +6,6 @@
 #include <json.hpp>
 #include <utils/flog.h>
 #include <fstream>
-#include <iostream>
 #include <map>
 
 using json = nlohmann::json;
@@ -120,9 +119,6 @@ void createDockFromInfo(ImGuiID dockspaceID, const DockNodeInfo& info)
 
         //ImGui::DockBuilderSplitNode(info.nodeID, splitDir, splitRatio,
         //                            &nodeID, &parentID);
-        size_t ini_data_size = 0;
-        const char* ini_data = ImGui::SaveIniSettingsToMemory(&ini_data_size);
-        std::cout<<"---------------"<<std::endl<<"STD:"<<std::endl<<ini_data<<std::endl<<"---------------"<<std::endl;
 
         // Recursively handle child nodes
         if (info.child[0]) {
@@ -181,7 +177,6 @@ void layout::printAllDockNodesAsJson(ImGuiDockNode* node, std::string filename) 
         // Output JSON to console or file
         std::string json_output = root_node_json.dump(4); // 4 is the indentation level
         // Write the JSON string to a file
-        std::cout << json_output<<std::endl;
         std::ofstream file(filename, std::ios::out);
         if (file.is_open()) {
             file << json_output;

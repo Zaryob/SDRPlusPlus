@@ -476,8 +476,6 @@ void MainWindow::draw() {
 
     if (firstMenuRender) {
 
-
-
         // Rebuild the layout from the deserialized tree
         layout::createDockLayoutFromJson(dockspace_id, availableSpaceForDocking, "dock_layout.json");
 
