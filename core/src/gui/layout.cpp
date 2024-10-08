@@ -3,9 +3,10 @@
 //
 
 #include <gui/layout.h>
+#include <gui/layout_builder.h>
 #include <json.hpp>
 #include <utils/flog.h>
-#include <fstream>
+#include <core.h>
 #include <map>
 
 using json = nlohmann::json;
@@ -139,18 +140,86 @@ void layout::createDockLayoutFromJson(ImGuiID& dockspaceID, ImVec2 availableSpac
     // Parse the JSON
     // Open the JSON file
     dictionary.clear();
-    std::ifstream input_file(filename);
-    if (!input_file.is_open()) {
-        flog::error("Could not open file: {0}\n", filename.c_str());
-        return;
-    }
 
-    // Parse the JSON
-    json layout_json;
-    input_file >> layout_json;
+    LayoutBuilder builder;
+
+    json menuNode = LayoutBuilder()
+        .setMergedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
+        .setNodeID("MenuNode")
+        .setSharedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
+        .setSize(298.0, 620.0)
+        .setSplitAxis(ImGuiAxis_None)
+        .setState(ImGuiDockNodeState_HostWindowVisible)
+        .addWindow("Menu")
+        .build();
+
+    json debugNode = LayoutBuilder()
+        .setMergedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
+        .setNodeID("DebugNode")
+        .setSharedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
+        .setSize(298.0, 155.0)
+        .setSplitAxis(ImGuiAxis_None)
+        .setState(ImGuiDockNodeState_HostWindowVisible)
+        .addWindow("Debug")
+        .build();
+
+    json waterfallNode = LayoutBuilder()
+        .setMergedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
+        .setNodeID("WaterfallNode")
+        .setSharedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
+        .setSize(1196.0, 777.0)
+        .setSplitAxis(ImGuiAxis_None)
+        .setState(ImGuiDockNodeState_HostWindowVisible)
+        .addWindow("Waterfall")
+        .build();
+
+    json leftSideDock = LayoutBuilder()
+                .setMergedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
+                .setNodeID("DockSpaceLeft")
+                .setSharedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
+                .setSize(298.0, 777.0)
+                .setSplitAxis(ImGuiAxis_Y)
+                .setState(ImGuiDockNodeState_Unknown)
+                .setChildNode1(menuNode)
+                .setChildNode2(debugNode)
+                .build();
+
+
+    json dockWidgetConfig = LayoutBuilder()
+        .setLocalFlags(ImGuiDockNodeFlags_DockSpace | ImGuiDockNodeFlags_PassthruCentralNode)
+        .setMergedFlags(ImGuiDockNodeFlags_DockSpace | ImGuiDockNodeFlags_PassthruCentralNode)
+        .setNodeID("DockSpace")
+        .setSharedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
+        .setSize(1496.0, 777.0)
+        .setSplitAxis(ImGuiAxis_X)
+        .setState(ImGuiDockNodeState_Unknown)
+        .setChildNode1(leftSideDock)
+        .setChildNode2(waterfallNode)
+        .build();
+
+    flog::info("Loading config");
+
+    core::configManager.acquire();
+    std::string filepath = core::configManager.conf["resourcesDirectory"];
+    filepath += "/layouts/" + filename + ".json";
+    core::configManager.release();
+
+    layoutConfig.setPath(filepath);
+    layoutConfig.load(dockWidgetConfig);
+    layoutConfig.enableAutoSave();
+
+    // std::ifstream input_file(filename);
+    // if (!input_file.is_open()) {
+    //     flog::error("Could not open file: {0}\n", filename.c_str());
+    //    return;
+    // }
+
 
     // Deserialize root node
-    DockNodeInfo root_node_info = deserializeDockNode(layout_json);
+    layoutConfig.acquire();
+    DockNodeInfo root_node_info = deserializeDockNode(layoutConfig.conf);
+    layoutConfig.release();
+
     // Remove any existing dockspace and prepare for a new layout
     ImGui::DockBuilderRemoveNode(dockspaceID); // Clear out existing dockspace
 
@@ -162,7 +231,6 @@ void layout::createDockLayoutFromJson(ImGuiID& dockspaceID, ImVec2 availableSpac
     ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_None); // Add the main dockspace
     dockspaceID = dockspace_id;
 
-
     // Rebuild the layout from the deserialized tree
     createDockFromInfo(dockspace_id, root_node_info);
     ImGui::DockBuilderFinish(dockspace_id);
@@ -172,19 +240,17 @@ void layout::createDockLayoutFromJson(ImGuiID& dockspaceID, ImVec2 availableSpac
 void layout::printAllDockNodesAsJson(ImGuiDockNode* node, std::string filename) {
     if (node) {
         // Serialize the dock node tree into JSON
-        json root_node_json = serializeDockNode(node);
+        core::configManager.acquire();
+        std::string filepath = core::configManager.conf["resourcesDirectory"];
+        filepath += "/layouts/" + filename + ".json";
+        core::configManager.release();
 
-        // Output JSON to console or file
-        std::string json_output = root_node_json.dump(4); // 4 is the indentation level
-        // Write the JSON string to a file
-        std::ofstream file(filename, std::ios::out);
-        if (file.is_open()) {
-            file << json_output;
-            file.close();
-            flog::info("JSON saved to file: {0}\n", filename.c_str());
-        } else {
-            flog::error("Could not open file for writing: {0}\n", filename.c_str());
-        }
+        layoutConfig.acquire();
+        layoutConfig.setPath(filepath);
+        layoutConfig.conf = serializeDockNode(node);
+        layoutConfig.release();
+        layoutConfig.save();
+
     } else {
         flog::error("DockSpace node not found.");
     }

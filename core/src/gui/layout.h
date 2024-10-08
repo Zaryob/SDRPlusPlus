@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include <config.h>
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 #include <vector>
@@ -21,6 +22,8 @@ struct DockNodeInfo {
 };
 
 namespace layout {
+    inline ConfigManager layoutConfig;
+
     void printAllDockNodesAsJson(ImGuiDockNode* node, std::string filename);
     void createDockLayoutFromJson(ImGuiID& dockspaceID,ImVec2 availableSpaceForDocking, std::string layoutJson);
 }

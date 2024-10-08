@@ -477,20 +477,24 @@ void MainWindow::draw() {
     if (firstMenuRender) {
 
         // Rebuild the layout from the deserialized tree
-        layout::createDockLayoutFromJson(dockspace_id, availableSpaceForDocking, "dock_layout.json");
+        core::configManager.acquire();
+        std::string layout = core::configManager.conf["layout"];
+        core::configManager.release();
 
-        // Finalize the docking layout
+        layout::createDockLayoutFromJson(dockspace_id, availableSpaceForDocking, layout);
 
         /*
         TODO: Add this as a backup in case the layout file is missing
 
-        ImGui::DockBuilderRemoveNode(dockspace_id);
-        ImGui::DockBuilderAddNode(dockspace_id, DOCKSPACE_FLAGS);
-        ImGui::DockBuilderSetNodeSize(dockspace_id, availableSpaceForDocking);
+        ImGuiID dockspaceId = ImGui::GetID("DockSpace");
+        dockspace_id = dockspaceId;
+        ImGui::DockBuilderRemoveNode(dockspaceId);
+        ImGui::DockBuilderAddNode(dockspaceId, DOCKSPACE_FLAGS);
+        ImGui::DockBuilderSetNodeSize(dockspaceId, availableSpaceForDocking);
 
-        ImGuiID dockspace_left = ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 0.2f, nullptr, &dockspace_id);
-        ImGui::DockBuilderDockWindow("Waterfall", dockspace_id);
-        ImGui::DockBuilderFinish(dockspace_id);
+        ImGuiID dockspace_left = ImGui::DockBuilderSplitNode(dockspaceId, ImGuiDir_Left, 0.2f, nullptr, &dockspaceId);
+        ImGui::DockBuilderDockWindow("Waterfall", dockspaceId);
+        ImGui::DockBuilderFinish(dockspaceId);
 
         ImGuiID dockspace_left_down = ImGui::DockBuilderSplitNode(dockspace_left, ImGuiDir_Down, 0.2f, nullptr, &dockspace_left);
 
@@ -507,7 +511,11 @@ void MainWindow::draw() {
             ImGuiContext& g = *GImGui;
             ImGuiID id = ImGui::GetID("DockSpace");
             ImGuiDockNode* node = ImGui::DockContextFindNodeByID(&g, id);
-            layout::printAllDockNodesAsJson(node, "dock_layout.json");
+
+            core::configManager.acquire();
+            std::string layout = core::configManager.conf["layout"];
+            core::configManager.release();
+            layout::printAllDockNodesAsJson(node, layout);
         }
     }
 

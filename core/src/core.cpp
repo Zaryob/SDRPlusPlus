@@ -228,6 +228,7 @@ int sdrpp_main(int argc, char* argv[]) {
 #ifdef __ANDROID__
     defConfig["uiScale"] = 3.0f;
 #else
+    defConfig["layout"] = "default";
     defConfig["uiScale"] = 1.0f;
 #endif
 
