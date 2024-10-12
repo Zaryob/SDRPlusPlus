@@ -20,7 +20,7 @@ json serializeDockNode(ImGuiDockNode* node)
     json j;
     j["NodeID"] = node->ID;
     j["SplitAxis"] = node->SplitAxis;
-    j["Size"] = { node->Size.x, node->Size.y };
+    j["Size"] = {node->Size.x, node->Size.y};
     j["SharedFlags"] = node->SharedFlags;
     j["LocalFlags"] = node->LocalFlags;
     j["LocalFlagsInWindows"] = node->LocalFlagsInWindows;
@@ -30,7 +30,7 @@ json serializeDockNode(ImGuiDockNode* node)
     // Serialize docked windows
     if (!node->Windows.empty()) {
         j["Windows"] = json::array();
-        for (ImGuiWindow* window : node->Windows) {
+        for (ImGuiWindow *window: node->Windows) {
             json window_info;
             window_info["WindowID"] = window->ID;
             window_info["WindowName"] = window->Name;
@@ -62,7 +62,7 @@ DockNodeInfo deserializeDockNode(const json& j)
 
     // Deserialize the windows associated with the node
     if (j.contains("Windows")) {
-        for (const auto& window : j["Windows"]) {
+        for (const auto &window: j["Windows"]) {
             nodeInfo.windows.push_back(window["WindowName"].get<std::string>());
         }
     }
@@ -86,29 +86,23 @@ void createDockFromInfo(ImGuiID dockspaceID, const DockNodeInfo& info)
         ImGuiID nodeID = info.nodeID;
         ImGuiID leftID = info.child[0]->nodeID;
         ImGuiID rightID = info.child[1]->nodeID;
-        if(dictionary.size() != 0){
-            nodeID=dictionary[nodeID];
+        if (dictionary.size() != 0) {
+            nodeID = dictionary[nodeID];
         }
 
         ImGuiDir splitDir;
         float splitRatio = 0.5f;
 
-        if(info.splitAxis == -1) {
+        if (info.splitAxis == -1) {
             splitDir = ImGuiDir_None;
+        } else if (info.splitAxis == 0) {
+            splitDir = (ImGuiDir) (info.splitAxis);
+        } else {
+            splitDir = (ImGuiDir) (2 * info.splitAxis);
         }
-        else if(info.splitAxis == 0){
-            splitDir = (ImGuiDir)(info.splitAxis);
-
-        }
-        else{
-            splitDir = (ImGuiDir)(2 * info.splitAxis);
-
-        }
-        if(info.splitAxis==0) {
+        if (info.splitAxis == 0) {
             splitRatio = info.child[0]->size.x / (info.child[0]->size.x + info.child[1]->size.x);
-        }
-        else
-        {
+        } else {
             splitRatio = info.child[0]->size.y / (info.child[0]->size.y + info.child[1]->size.y);
         }
         // Split the main dockspace node into left and right nodes
@@ -128,7 +122,7 @@ void createDockFromInfo(ImGuiID dockspaceID, const DockNodeInfo& info)
         if (info.child[1]) {
             createDockFromInfo(dockspaceID, *info.child[1]);
         }
-       } else {
+    } else {
         // If the node has no children, dock the windows
         for (const auto& window_name : info.windows) {
             ImGui::DockBuilderDockWindow(window_name.c_str(), dictionary[info.nodeID]);
@@ -144,58 +138,59 @@ void layout::createDockLayoutFromJson(ImGuiID& dockspaceID, ImVec2 availableSpac
     LayoutBuilder builder;
 
     json menuNode = LayoutBuilder()
-        .setMergedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
-        .setNodeID("MenuNode")
-        .setSharedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
-        .setSize(298.0, 620.0)
-        .setSplitAxis(ImGuiAxis_None)
-        .setState(ImGuiDockNodeState_HostWindowVisible)
-        .addWindow("Menu")
-        .build();
+            .setMergedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
+            .setNodeID("MenuNode")
+            .setSharedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
+            .setSize(298.0, 620.0)
+            .setSplitAxis(ImGuiAxis_None)
+            .setState(ImGuiDockNodeState_HostWindowVisible)
+            .addWindow("Menu")
+            .build();
 
     json debugNode = LayoutBuilder()
-        .setMergedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
-        .setNodeID("DebugNode")
-        .setSharedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
-        .setSize(298.0, 155.0)
-        .setSplitAxis(ImGuiAxis_None)
-        .setState(ImGuiDockNodeState_HostWindowVisible)
-        .addWindow("Debug")
-        .build();
+            .setMergedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
+            .setNodeID("DebugNode")
+            .setSharedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
+            .setSize(298.0, 155.0)
+            .setSplitAxis(ImGuiAxis_None)
+            .setState(ImGuiDockNodeState_HostWindowVisible)
+            .addWindow("Debug")
+            .addWindow("Module Manager")
+            .build();
 
     json waterfallNode = LayoutBuilder()
-        .setMergedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
-        .setNodeID("WaterfallNode")
-        .setSharedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
-        .setSize(1196.0, 777.0)
-        .setSplitAxis(ImGuiAxis_None)
-        .setState(ImGuiDockNodeState_HostWindowVisible)
-        .addWindow("Waterfall")
-        .build();
+            .setMergedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
+            .setNodeID("WaterfallNode")
+            .setSharedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
+            .setSize(1196.0, 777.0)
+            .setSplitAxis(ImGuiAxis_None)
+            .setState(ImGuiDockNodeState_HostWindowVisible)
+            .addWindow("Waterfall")
+            .build();
 
     json leftSideDock = LayoutBuilder()
-                .setMergedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
-                .setNodeID("DockSpaceLeft")
-                .setSharedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
-                .setSize(298.0, 777.0)
-                .setSplitAxis(ImGuiAxis_Y)
-                .setState(ImGuiDockNodeState_Unknown)
-                .setChildNode1(menuNode)
-                .setChildNode2(debugNode)
-                .build();
+            .setMergedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
+            .setNodeID("DockSpaceLeft")
+            .setSharedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
+            .setSize(298.0, 777.0)
+            .setSplitAxis(ImGuiAxis_Y)
+            .setState(ImGuiDockNodeState_Unknown)
+            .setChildNode1(menuNode)
+            .setChildNode2(debugNode)
+            .build();
 
 
     json dockWidgetConfig = LayoutBuilder()
-        .setLocalFlags(ImGuiDockNodeFlags_DockSpace | ImGuiDockNodeFlags_PassthruCentralNode)
-        .setMergedFlags(ImGuiDockNodeFlags_DockSpace | ImGuiDockNodeFlags_PassthruCentralNode)
-        .setNodeID("DockSpace")
-        .setSharedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
-        .setSize(1496.0, 777.0)
-        .setSplitAxis(ImGuiAxis_X)
-        .setState(ImGuiDockNodeState_Unknown)
-        .setChildNode1(leftSideDock)
-        .setChildNode2(waterfallNode)
-        .build();
+            .setLocalFlags(ImGuiDockNodeFlags_DockSpace | ImGuiDockNodeFlags_PassthruCentralNode)
+            .setMergedFlags(ImGuiDockNodeFlags_DockSpace | ImGuiDockNodeFlags_PassthruCentralNode)
+            .setNodeID("DockSpace")
+            .setSharedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
+            .setSize(1496.0, 777.0)
+            .setSplitAxis(ImGuiAxis_X)
+            .setState(ImGuiDockNodeState_Unknown)
+            .setChildNode1(leftSideDock)
+            .setChildNode2(waterfallNode)
+            .build();
 
     flog::info("Loading config");
 
@@ -224,7 +219,7 @@ void layout::createDockLayoutFromJson(ImGuiID& dockspaceID, ImVec2 availableSpac
     ImGui::DockBuilderRemoveNode(dockspaceID); // Clear out existing dockspace
 
     // Remove any existing dockspace and prepare for a new layout
-    ImGuiID dockspace_id = root_node_info.nodeID ;
+    ImGuiID dockspace_id = root_node_info.nodeID;
     ImGui::DockSpace(dockspace_id, availableSpaceForDocking, ImGuiDockNodeFlags_None);
 
     ImGui::DockBuilderRemoveNode(dockspace_id); // Clear out existing dockspace
@@ -234,7 +229,6 @@ void layout::createDockLayoutFromJson(ImGuiID& dockspaceID, ImVec2 availableSpac
     // Rebuild the layout from the deserialized tree
     createDockFromInfo(dockspace_id, root_node_info);
     ImGui::DockBuilderFinish(dockspace_id);
-
 }
 
 void layout::printAllDockNodesAsJson(ImGuiDockNode* node, std::string filename) {
@@ -250,7 +244,6 @@ void layout::printAllDockNodesAsJson(ImGuiDockNode* node, std::string filename) 
         layoutConfig.conf = serializeDockNode(node);
         layoutConfig.release();
         layoutConfig.save();
-
     } else {
         flog::error("DockSpace node not found.");
     }

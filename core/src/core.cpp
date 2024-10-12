@@ -238,6 +238,7 @@ int sdrpp_main(int argc, char* argv[]) {
     defConfig["offset"] = 0.0;
     defConfig["showMenu"] = true;
     defConfig["showWaterfall"] = true;
+    defConfig["showDebug"] = true;
     defConfig["source"] = "";
     defConfig["decimationPower"] = 0;
     defConfig["iqCorrection"] = false;

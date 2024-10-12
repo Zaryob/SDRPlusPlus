@@ -77,7 +77,8 @@ void MainWindow::init() {
     gui::menu.registerEntry("Display", displaymenu::draw, NULL);
     gui::menu.registerEntry("Theme", thememenu::draw, NULL);
     gui::menu.registerEntry("VFO Color", vfo_color_menu::draw, NULL);
-    gui::menu.registerEntry("Module Manager", module_manager_menu::draw, NULL);
+
+    gui::dock.registerEntry("Module Manager", module_manager_menu::draw, NULL);
 
     gui::freqSelect.init();
 
@@ -89,7 +90,8 @@ void MainWindow::init() {
     fft_out = (fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex) * fftSize);
     fftwPlan = fftwf_plan_dft_1d(fftSize, fft_in, fft_out, FFTW_FORWARD, FFTW_ESTIMATE);
 
-    sigpath::iqFrontEnd.init(&dummyStream, 8000000, true, 1, false, 1024, 20.0, IQFrontEnd::FFTWindow::NUTTALL, acquireFFTBuffer, releaseFFTBuffer, this);
+    sigpath::iqFrontEnd.init(&dummyStream, 8000000, true, 1, false, 1024, 20.0, IQFrontEnd::FFTWindow::NUTTALL,
+                             acquireFFTBuffer, releaseFFTBuffer, this);
     sigpath::iqFrontEnd.start();
 
     vfoCreatedHandler.handler = vfoAddedHandler;
@@ -110,8 +112,7 @@ void MainWindow::init() {
             LoadingScreen::show("Loading " + file.path().filename().string());
             core::moduleManager.loadModule(path);
         }
-    }
-    else {
+    } else {
         flog::warn("Module directory {0} does not exist, not loading modules from directory", modulesDir);
     }
 
@@ -157,8 +158,7 @@ void MainWindow::init() {
             if (!file.is_regular_file()) { continue; }
             colormaps::loadMap(path);
         }
-    }
-    else {
+    } else {
         flog::warn("Color map directory {0} does not exist, not loading modules from directory", modulesDir);
     }
 
@@ -184,7 +184,7 @@ void MainWindow::init() {
     gui::waterfall.setWaterfallMin(fftMin);
     gui::waterfall.setFFTMax(fftMax);
     gui::waterfall.setWaterfallMax(fftMax);
-    gui::waterfall.setContrast((int)std::floor(fftContrast));
+    gui::waterfall.setContrast((int) std::floor(fftContrast));
     double frequency = core::configManager.conf["frequency"];
 
     showMenu = core::configManager.conf["showMenu"];
@@ -195,7 +195,7 @@ void MainWindow::init() {
     sigpath::sourceManager.tune(frequency);
     gui::waterfall.setCenterFrequency(frequency);
     bw = 1.0;
-    fftContrast =80;
+    fftContrast = 80;
     gui::waterfall.vfoFreqChanged = false;
     gui::waterfall.centerFreqMoved = false;
     gui::waterfall.selectFirstVFO();
@@ -273,7 +273,8 @@ void MainWindow::draw() {
     if (vfo != NULL) {
         if (vfo->centerOffsetChanged) {
             if (tuningMode == tuner::TUNER_MODE_CENTER) {
-                tuner::tune(tuner::TUNER_MODE_CENTER, gui::waterfall.selectedVFO, gui::waterfall.getCenterFrequency() + vfo->generalOffset);
+                tuner::tune(tuner::TUNER_MODE_CENTER, gui::waterfall.selectedVFO,
+                            gui::waterfall.getCenterFrequency() + vfo->generalOffset);
             }
             gui::freqSelect.setFrequency(gui::waterfall.getCenterFrequency() + vfo->generalOffset);
             gui::freqSelect.frequencyChanged = false;
@@ -287,7 +288,9 @@ void MainWindow::draw() {
 
     // Handle selection of another VFO
     if (gui::waterfall.selectedVFOChanged) {
-        gui::freqSelect.setFrequency((vfo != NULL) ? (vfo->generalOffset + gui::waterfall.getCenterFrequency()) : gui::waterfall.getCenterFrequency());
+        gui::freqSelect.setFrequency((vfo != NULL)
+                                         ? (vfo->generalOffset + gui::waterfall.getCenterFrequency())
+                                         : gui::waterfall.getCenterFrequency());
         gui::waterfall.selectedVFOChanged = false;
         gui::freqSelect.frequencyChanged = false;
     }
@@ -315,8 +318,7 @@ void MainWindow::draw() {
         sigpath::sourceManager.tune(gui::waterfall.getCenterFrequency());
         if (vfo != NULL) {
             gui::freqSelect.setFrequency(gui::waterfall.getCenterFrequency() + vfo->generalOffset);
-        }
-        else {
+        } else {
             gui::freqSelect.setFrequency(gui::waterfall.getCenterFrequency());
         }
         core::configManager.acquire();
@@ -336,7 +338,8 @@ void MainWindow::draw() {
     // ImGui::BeginChild("TopBarChild", ImVec2(0, 49.0f * style::uiScale), false, ImGuiWindowFlags_HorizontalScrollbar);
     ImVec2 btnSize(30 * style::uiScale, 30 * style::uiScale);
 
-    if (ImGui::ImageButton("sdrpp_menu_btn", icons::MENU, btnSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), textCol) || ImGui::IsKeyPressed(ImGuiKey_Menu, false)) {
+    if (ImGui::ImageButton("sdrpp_menu_btn", icons::MENU, btnSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0),
+                           textCol) || ImGui::IsKeyPressed(ImGuiKey_Menu, false)) {
         showMenu = !showMenu;
         core::configManager.acquire();
         core::configManager.conf["showMenu"] = showMenu;
@@ -348,13 +351,14 @@ void MainWindow::draw() {
     bool tmpPlaySate = playing;
     if (playButtonLocked && !tmpPlaySate) { style::beginDisabled(); }
     if (playing) {
-
-        if (ImGui::ImageButton("sdrpp_stop_btn",icons::STOP, btnSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), textCol) || ImGui::IsKeyPressed(ImGuiKey_End, false)) {
+        if (ImGui::ImageButton("sdrpp_stop_btn", icons::STOP, btnSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0),
+                               textCol) || ImGui::IsKeyPressed(ImGuiKey_End, false)) {
             setPlayState(false);
         }
-    }
-    else { // TODO: Might need to check if there even is a device
-        if (ImGui::ImageButton("sdrpp_play_btn", icons::PLAY, btnSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), textCol) || ImGui::IsKeyPressed(ImGuiKey_End, false)) {
+    } else {
+        // TODO: Might need to check if there even is a device
+        if (ImGui::ImageButton("sdrpp_play_btn", icons::PLAY, btnSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0),
+                               textCol) || ImGui::IsKeyPressed(ImGuiKey_End, false)) {
             setPlayState(true);
         }
     }
@@ -369,7 +373,8 @@ void MainWindow::draw() {
     ImGui::SameLine();
     float origY = ImGui::GetCursorPosY();
 
-    sigpath::sinkManager.showVolumeSlider(gui::waterfall.selectedVFO, "##_sdrpp_main_volume_", 248 * style::uiScale, btnSize.x, 5, true);
+    sigpath::sinkManager.showVolumeSlider(gui::waterfall.selectedVFO, "##_sdrpp_main_volume_", 248 * style::uiScale,
+                                          btnSize.x, 5, true);
 
     ImGui::SameLine();
 
@@ -380,16 +385,18 @@ void MainWindow::draw() {
 
     ImGui::SetCursorPosY(origY);
     if (tuningMode == tuner::TUNER_MODE_CENTER) {
-        if (ImGui::ImageButton("sdrpp_ena_st_btn", icons::CENTER_TUNING, btnSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), textCol)) {
+        if (ImGui::ImageButton("sdrpp_ena_st_btn", icons::CENTER_TUNING, btnSize, ImVec2(0, 0), ImVec2(1, 1),
+                               ImVec4(0, 0, 0, 0), textCol)) {
             tuningMode = tuner::TUNER_MODE_NORMAL;
             gui::waterfall.VFOMoveSingleClick = false;
             core::configManager.acquire();
             core::configManager.conf["centerTuning"] = false;
             core::configManager.release(true);
         }
-    }
-    else { // TODO: Might need to check if there even is a device
-        if (ImGui::ImageButton("sdrpp_dis_st_btn",icons::NORMAL_TUNING, btnSize, ImVec2(0, 0), ImVec2(1, 1),  ImVec4(0, 0, 0, 0), textCol)) {
+    } else {
+        // TODO: Might need to check if there even is a device
+        if (ImGui::ImageButton("sdrpp_dis_st_btn", icons::NORMAL_TUNING, btnSize, ImVec2(0, 0), ImVec2(1, 1),
+                               ImVec4(0, 0, 0, 0), textCol)) {
             tuningMode = tuner::TUNER_MODE_CENTER;
             gui::waterfall.VFOMoveSingleClick = true;
             tuner::tune(tuner::TUNER_MODE_CENTER, gui::waterfall.selectedVFO, gui::freqSelect.frequency);
@@ -402,7 +409,8 @@ void MainWindow::draw() {
     ImGui::SameLine();
 
     int snrOffset = 87.0f * style::uiScale;
-    int snrWidth = std::clamp<int>(ImGui::GetWindowSize().x - ImGui::GetCursorPosX() - snrOffset, 100.0f * style::uiScale, 300.0f * style::uiScale);
+    int snrWidth = std::clamp<int>(ImGui::GetWindowSize().x - ImGui::GetCursorPosX() - snrOffset,
+                                   100.0f * style::uiScale, 300.0f * style::uiScale);
     int snrPos = std::max<int>(ImGui::GetWindowSize().x - (snrWidth + snrOffset), ImGui::GetCursorPosX());
 
     ImGui::SetCursorPosX(snrPos);
@@ -418,7 +426,8 @@ void MainWindow::draw() {
     // Logo button
     ImGui::SetCursorPosX(ImGui::GetWindowSize().x - (48 * style::uiScale));
     ImGui::SetCursorPosY(10.0f * style::uiScale);
-    if (ImGui::ImageButton("sdrpp_logo_st_btn",icons::LOGO, ImVec2(32 * style::uiScale, 32 * style::uiScale), ImVec2(0, 0), ImVec2(1, 1))) {
+    if (ImGui::ImageButton("sdrpp_logo_st_btn", icons::LOGO, ImVec2(32 * style::uiScale, 32 * style::uiScale),
+                           ImVec2(0, 0), ImVec2(1, 1))) {
         showCredits = true;
     }
     if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
@@ -441,15 +450,16 @@ void MainWindow::draw() {
         if (grabbingMenu) {
             newWidth = mousePos.x;
             newWidth = std::clamp<float>(newWidth, 250, winSize.x - 250);
-            ImGui::GetForegroundDrawList()->AddLine(ImVec2(newWidth, curY), ImVec2(newWidth, winSize.y - 10), ImGui::GetColorU32(ImGuiCol_SeparatorActive));
+            ImGui::GetForegroundDrawList()->AddLine(ImVec2(newWidth, curY), ImVec2(newWidth, winSize.y - 10),
+                                                    ImGui::GetColorU32(ImGuiCol_SeparatorActive));
         }
-        if (mousePos.x >= newWidth - (2.0f * style::uiScale) && mousePos.x <= newWidth + (2.0f * style::uiScale) && mousePos.y > curY) {
+        if (mousePos.x >= newWidth - (2.0f * style::uiScale) && mousePos.x <= newWidth + (2.0f * style::uiScale) &&
+            mousePos.y > curY) {
             ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
             if (click) {
                 grabbingMenu = true;
             }
-        }
-        else {
+        } else {
             ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
         }
         if (!down && grabbingMenu) {
@@ -471,11 +481,11 @@ void MainWindow::draw() {
     ImVec2 availableSpaceForDocking = ImGui::GetContentRegionAvail();
 
     // Create a child region with a dockspace in the remaining space
-    ImGui::BeginChild("DockingRegion", availableSpaceForDocking, false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+    ImGui::BeginChild("DockingRegion", availableSpaceForDocking, false,
+                      ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
 
 
     if (firstMenuRender) {
-
         // Rebuild the layout from the deserialized tree
         core::configManager.acquire();
         std::string layout = core::configManager.conf["layout"];
@@ -502,12 +512,11 @@ void MainWindow::draw() {
         ImGui::DockBuilderDockWindow("Debug", dockspace_left_down);
         ImGui::DockBuilderFinish(dockspace_left);
         */
-    }
-    else{
+    } else {
         ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), DOCKSPACE_FLAGS);
 
-        if(ImGui::IsKeyPressed(ImGuiKey_F12)){
-            saveDockLayout=false;
+        if (ImGui::IsKeyPressed(ImGuiKey_F12)) {
+            saveDockLayout = false;
             ImGuiContext& g = *GImGui;
             ImGuiID id = ImGui::GetID("DockSpace");
             ImGuiDockNode* node = ImGui::DockContextFindNodeByID(&g, id);
@@ -524,7 +533,7 @@ void MainWindow::draw() {
     ImGui::End(); // Main
 
     // Left Column
-    ImGui::SetNextWindowSizeConstraints(ImVec2(300 * style::uiScale, 300* style::uiScale), ImVec2(INFINITY, INFINITY));
+    ImGui::SetNextWindowSizeConstraints(ImVec2(300 * style::uiScale, 300 * style::uiScale), ImVec2(INFINITY, INFINITY));
     ImGui::Begin("Menu", NULL);
     ImGui::BeginChild("Menu Child");
     if (gui::menu.draw(firstMenuRender)) {
@@ -546,14 +555,23 @@ void MainWindow::draw() {
     }
     if (startedWithMenuClosed) {
         startedWithMenuClosed = false;
-    }
-    else {
+    } else {
         firstMenuRender = false;
     }
 
     ImGui::EndChild();
 
-    ImGui::Begin("Debug", &debugWindow);
+    if (gui::dock.draw()) {
+        core::configManager.acquire();
+        std::string layout = core::configManager.conf["layout"];
+        core::configManager.release();
+        //layout::printAllDockNodesAsJson(ImGui::DockBuilderGetNode(dockspace_id), layout);
+    }
+
+    // Display the Debug Window
+
+    if (debugWindow) {
+        ImGui::Begin("Debug", &debugWindow);
         ImGui::Text("Frame time: %.3f ms/frame", ImGui::GetIO().DeltaTime * 1000.0f);
         ImGui::Text("Framerate: %.1f FPS", ImGui::GetIO().Framerate);
         ImGui::Text("Center Frequency: %.0f Hz", gui::waterfall.getCenterFrequency());
@@ -579,7 +597,8 @@ void MainWindow::draw() {
 
         ImGui::Spacing();
 
-    ImGui::End();
+        ImGui::End();
+    }
 
     // Right Column
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
@@ -591,7 +610,8 @@ void MainWindow::draw() {
     ImGui::Begin("Waterfall", NULL);
     ImVec2 availableSpaceInWaterfall = ImGui::GetContentRegionAvail();
     ImGui::Columns(2, "WaterfallColumns", false);
-    ImGui::SetColumnWidth(0, std::max<int>(availableSpaceInWaterfall.x - (40.0f * style::uiScale), 100.0f * style::uiScale));
+    ImGui::SetColumnWidth(0, std::max<int>(availableSpaceInWaterfall.x - (40.0f * style::uiScale),
+                                           100.0f * style::uiScale));
     ImGui::SetColumnWidth(1, 40.0f * style::uiScale);
 
     ImGui::BeginChild("FFT Child");
@@ -635,18 +655,15 @@ void MainWindow::draw() {
                 double interval;
                 if (ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
                     interval = vfo->snapInterval * 10.0;
-                }
-                else if (ImGui::IsKeyDown(ImGuiKey_LeftAlt)) {
+                } else if (ImGui::IsKeyDown(ImGuiKey_LeftAlt)) {
                     interval = vfo->snapInterval * 0.1;
-                }
-                else {
+                } else {
                     interval = vfo->snapInterval;
                 }
 
                 nfreq = gui::waterfall.getCenterFrequency() + vfo->generalOffset + (interval * wheel);
                 nfreq = roundl(nfreq / interval) * interval;
-            }
-            else {
+            } else {
                 nfreq = gui::waterfall.getCenterFrequency() - (gui::waterfall.getViewBandwidth() * wheel / 20.0);
             }
             tuner::tune(tuningMode, gui::waterfall.selectedVFO, nfreq);
@@ -715,16 +732,17 @@ void MainWindow::draw() {
         // Clamp fftMax to ensure it does not exceed 0
         if (fftMax > 0.0f) {
             fftMax = 0.0f;
-            fftMin = fftMax - range;  // Adjust fftMin to maintain the range
+            fftMin = fftMax - range; // Adjust fftMin to maintain the range
         }
 
         // Clamp fftMin to ensure it does not exceed -160
         if (fftMin < -160.0f) {
             fftMin = -160.0f;
-            fftMax = fftMin + range;  // Adjust fftMax to maintain the range
+            fftMax = fftMin + range; // Adjust fftMax to maintain the range
         }
 
-        flog::verbose("Offset Changed:\n\toffset: {0},\n\trange: {1},\n\tfftMax: {2},\n\tfftMin: {3}", offset, range, fftMax, fftMin);
+        flog::verbose("Offset Changed:\n\toffset: {0},\n\trange: {1},\n\tfftMax: {2},\n\tfftMin: {3}", offset, range,
+                      fftMax, fftMin);
 
         core::configManager.acquire();
         core::configManager.conf["max"] = fftMax;
@@ -747,15 +765,16 @@ void MainWindow::draw() {
         // Clamp fftMax to ensure it does not exceed 0
         if (fftMax > 0.0f) {
             fftMax = 0.0f;
-            fftMin = fftMax - range;  // Adjust fftMin to maintain the range
+            fftMin = fftMax - range; // Adjust fftMin to maintain the range
         }
         // Clamp fftMin to ensure it does not exceed -160
         if (fftMin < -160.0f) {
             fftMin = -160.0f;
-            fftMax = fftMin + range;  // Adjust fftMax to maintain the range
+            fftMax = fftMin + range; // Adjust fftMax to maintain the range
         }
 
-        flog::verbose("Range Changed:\n\toffset: {0},\n\trange: {1},\n\tfftMax: {2},\n\tfftMin: {3}", offset, range, fftMax, fftMin);
+        flog::verbose("Range Changed:\n\toffset: {0},\n\trange: {1},\n\tfftMax: {2},\n\tfftMin: {3}", offset, range,
+                      fftMax, fftMin);
 
         core::configManager.acquire();
         core::configManager.conf["max"] = fftMax;
@@ -789,8 +808,7 @@ void MainWindow::setPlayState(bool _playing) {
         sigpath::sourceManager.tune(gui::waterfall.getCenterFrequency());
         playing = true;
         onPlayStateChange.emit(true);
-    }
-    else {
+    } else {
         playing = false;
         onPlayStateChange.emit(false);
         sigpath::sourceManager.stop();

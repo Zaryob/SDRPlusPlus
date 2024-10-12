@@ -34,7 +34,8 @@ public:
 
     bool lockWaterfallControls = false;
     bool playButtonLocked = false;
-    bool debugWindow = false;
+    bool debugWindow = true;
+    bool moduleWindow = false;
     bool saveDockLayout = false;
     Event<bool> onPlayStateChange;
 
