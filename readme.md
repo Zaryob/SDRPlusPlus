@@ -1,5 +1,7 @@
 # SDR++, The bloat-free SDR software<br>
 
+About this fork [details](https://github.com/Zaryob/SDRPlusPlus#about-this-fork)
+
 ![Screenshot](https://i.imgur.com/Ter2MQJ.png)
 SDR++ is a cross-platform and open source SDR software with the aim of being bloat free and simple to use.
 
@@ -309,6 +311,29 @@ sh make_macos_bundle.sh ./build ./SDR++.app
 ```
 
 This will create a `SDR++.app` bundle that you can instal like any other MacOS app by dragging it into Applications.
+
+# About this fork
+
+This fork is a personal project to add features and fix bugs that I find in the original project. I will try to keep 
+it up to date with the original project, but I can't guarantee that I will be able to do so. I will also try to 
+keep the changes as minimal as possible, so that it is easy to merge them back into the original project.
+
+In this fork I mainly implement dock layout to the application, so that some sinks seem need a lot of space which 
+couldn't providable via Menu bar. 
+
+## About Docking Layout
+
+In ImGui, Docking mechanism is not stable as it is still in beta. So, I have to use the beta version of ImGui.
+I implemented docking layout save and load mechanism to the application. So, you can save your layout and load it
+later.
+
+## Other Modules
+Other module changes: 
+
+* In frequency manager:
+  - I added a feature to colorize the frequency list based on the frequency.
+  - I added right click menu to the frequency list to add a new frequency.
+
 
 # Module List
 
