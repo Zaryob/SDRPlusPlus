@@ -228,6 +228,7 @@ int sdrpp_main(int argc, char* argv[]) {
 #ifdef __ANDROID__
     defConfig["uiScale"] = 3.0f;
 #else
+    defConfig["layout"] = "default";
     defConfig["uiScale"] = 1.0f;
 #endif
 
@@ -237,6 +238,7 @@ int sdrpp_main(int argc, char* argv[]) {
     defConfig["offset"] = 0.0;
     defConfig["showMenu"] = true;
     defConfig["showWaterfall"] = true;
+    defConfig["showDebug"] = true;
     defConfig["source"] = "";
     defConfig["decimationPower"] = 0;
     defConfig["iqCorrection"] = false;

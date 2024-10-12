@@ -31,6 +31,8 @@ void ConfigManager::load(json def, bool lock) {
         return;
     }
 
+    // TODO: Check if file not have fields from default config
+    //       and add them if needed
     try {
         std::ifstream file(path.c_str());
         file >> conf;

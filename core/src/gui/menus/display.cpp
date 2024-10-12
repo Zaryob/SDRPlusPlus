@@ -145,6 +145,12 @@ namespace displaymenu {
             core::configManager.release(true);
         }
 
+        if (ImGui::Checkbox("Show Debug##_sdrpp", &gui::mainWindow.debugWindow)) {
+            core::configManager.acquire();
+            core::configManager.conf["showDebug"] = gui::mainWindow.debugWindow;
+            core::configManager.release(true);
+        }
+
         if (ImGui::Checkbox("FFT Hold##_sdrpp", &fftHold)) {
             gui::waterfall.setFFTHold(fftHold);
             core::configManager.acquire();
