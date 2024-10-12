@@ -1,6 +1,7 @@
 #include <spyserver_client.h>
 #include <volk/volk.h>
 #include <cstring>
+#include <utils/flog.h>
 
 using namespace std::chrono_literals;
 
@@ -114,7 +115,7 @@ namespace spyserver {
 
         int size = _this->readSize(_this->receivedHeader.BodySize, _this->readBuf);
         if (size <= 0) {
-            printf("ERROR: Disconnected\n");
+            flog::error("ERROR: Disconnected\n");
             return;
         }
 
