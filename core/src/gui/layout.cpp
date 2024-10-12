@@ -135,13 +135,21 @@ void layout::createDockLayoutFromJson(ImGuiID& dockspaceID, ImVec2 availableSpac
     // Open the JSON file
     dictionary.clear();
 
+    float XSplit = availableSpaceForDocking.x;
+    float XSplitLeft = XSplit/ 10.0f * 3.0f;
+    float XSplitRight = XSplit - XSplitLeft;
+
+    float YSplit = availableSpaceForDocking.y;
+    float YSplitTop = YSplit / 10.0f * 6.0f;
+    float YSplitBottom = YSplit - YSplitTop;
+
     LayoutBuilder builder;
 
     json menuNode = LayoutBuilder()
             .setMergedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
             .setNodeID("MenuNode")
             .setSharedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
-            .setSize(298.0, 620.0)
+            .setSize(XSplitLeft, YSplitTop)
             .setSplitAxis(ImGuiAxis_None)
             .setState(ImGuiDockNodeState_HostWindowVisible)
             .addWindow("Menu")
@@ -151,7 +159,7 @@ void layout::createDockLayoutFromJson(ImGuiID& dockspaceID, ImVec2 availableSpac
             .setMergedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
             .setNodeID("DebugNode")
             .setSharedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
-            .setSize(298.0, 155.0)
+            .setSize(XSplitLeft, YSplitBottom)
             .setSplitAxis(ImGuiAxis_None)
             .setState(ImGuiDockNodeState_HostWindowVisible)
             .addWindow("Debug")
@@ -162,7 +170,7 @@ void layout::createDockLayoutFromJson(ImGuiID& dockspaceID, ImVec2 availableSpac
             .setMergedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
             .setNodeID("WaterfallNode")
             .setSharedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
-            .setSize(1196.0, 777.0)
+            .setSize(XSplitRight, YSplit)
             .setSplitAxis(ImGuiAxis_None)
             .setState(ImGuiDockNodeState_HostWindowVisible)
             .addWindow("Waterfall")
@@ -172,7 +180,7 @@ void layout::createDockLayoutFromJson(ImGuiID& dockspaceID, ImVec2 availableSpac
             .setMergedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
             .setNodeID("DockSpaceLeft")
             .setSharedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
-            .setSize(298.0, 777.0)
+            .setSize(XSplitLeft, YSplit)
             .setSplitAxis(ImGuiAxis_Y)
             .setState(ImGuiDockNodeState_Unknown)
             .setChildNode1(menuNode)
@@ -185,7 +193,7 @@ void layout::createDockLayoutFromJson(ImGuiID& dockspaceID, ImVec2 availableSpac
             .setMergedFlags(ImGuiDockNodeFlags_DockSpace | ImGuiDockNodeFlags_PassthruCentralNode)
             .setNodeID("DockSpace")
             .setSharedFlags(ImGuiDockNodeFlags_PassthruCentralNode)
-            .setSize(1496.0, 777.0)
+            .setSize(XSplit, YSplit)
             .setSplitAxis(ImGuiAxis_X)
             .setState(ImGuiDockNodeState_Unknown)
             .setChildNode1(leftSideDock)
