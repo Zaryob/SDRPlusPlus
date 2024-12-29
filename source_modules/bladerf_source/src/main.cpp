@@ -10,6 +10,7 @@
 #include <libbladeRF.h>
 #include <gui/smgui.h>
 #include <algorithm>
+#include <utils/optionlist.h>
 
 #define CONCAT(a, b) ((std::string(a) + b).c_str())
 
@@ -36,6 +37,10 @@ class BladeRFSourceModule : public ModuleManager::Instance {
 public:
     BladeRFSourceModule(std::string name) {
         this->name = name;
+
+        // Define clocks
+        clocks.define("onboard", "On-Board", CLOCK_SELECT_ONBOARD);
+        clocks.define("external", "External", CLOCK_SELECT_EXTERNAL);
 
         sampleRate = 1000000.0;
 
@@ -267,6 +272,15 @@ public:
         }
         config.release(true);
 
+        // Load clock source
+        clkId = clocks.keyId("onboard");
+        if (config.conf["devices"][selectedSerial].contains("clock")) {
+            std::string clkStr = config.conf["devices"][selectedSerial]["clock"];
+            if (clocks.keyExists(clkStr)) {
+                clkId = clocks.keyId(clkStr);
+            }
+        }
+
         // Load gain mode
         if (config.conf["devices"][selectedSerial].contains("gainMode")) {
             std::string gm = config.conf["devices"][selectedSerial]["gainMode"];
@@ -365,6 +379,7 @@ private:
         if (_this->bufferSize < 1024) { _this->bufferSize = 1024; }
 
         // Setup device parameters
+        _this->setClockSource(_this->clocks[_this->clkId]);
         bladerf_set_sample_rate(_this->openDev, BLADERF_CHANNEL_RX(_this->chanId), _this->sampleRate, NULL);
         bladerf_set_frequency(_this->openDev, BLADERF_CHANNEL_RX(_this->chanId), _this->freq);
         bladerf_set_bandwidth(_this->openDev, BLADERF_CHANNEL_RX(_this->chanId),
@@ -499,6 +514,19 @@ private:
             }
         }
 
+        SmGui::LeftLabel("Clock Source");
+        SmGui::FillWidth();
+        if (SmGui::Combo(CONCAT("##_balderf_clk_sel_", _this->name), &_this->clkId, _this->clocks.txt)) {
+            if (_this->running) {
+                _this->setClockSource(_this->clocks[_this->clkId]);
+            }
+            if (_this->selectedSerial != "") {
+                config.acquire();
+                config.conf["devices"][_this->selectedSerial]["clock"] = _this->clocks.key(_this->clkId);
+                config.release(true);
+            }
+        }
+
         // General config BS
         SmGui::LeftLabel("Gain control mode");
         SmGui::FillWidth();
@@ -554,6 +582,15 @@ private:
         }
     }
 
+    void setClockSource(bladerf_clock_select clk) {
+        if (selectedBladeType == BLADERF_TYPE_V1) {
+            bladerf_set_smb_mode(openDev, (clk == CLOCK_SELECT_EXTERNAL) ? BLADERF_SMB_MODE_INPUT : BLADERF_SMB_MODE_DISABLED);
+        }
+        else {
+            bladerf_set_clock_select(openDev, clk);
+        }
+    }
+
     void worker() {
         int16_t* buffer = new int16_t[bufferSize * 2];
         bladerf_metadata meta;
@@ -582,6 +619,7 @@ private:
     int devId = 0;
     int srId = 0;
     int bwId = 0;
+    int clkId = 0;
     int chanId = 0;
     int gainMode = 0;
     bool streamingEnabled = false;
@@ -597,8 +635,8 @@ private:
     std::string sampleRatesTxt;
     std::vector<uint64_t> bandwidths;
     std::string bandwidthsTxt;
-
     std::string channelNamesTxt;
+    OptionList<std::string, bladerf_clock_select> clocks;
 
     int bufferSize;
     struct bladerf_stream* rxStream;

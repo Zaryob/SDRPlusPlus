@@ -150,11 +150,11 @@ int sdrpp_main(int argc, char* argv[]) {
     defConfig["menuElements"][3]["name"] = "Sinks";
     defConfig["menuElements"][3]["open"] = true;
 
-    defConfig["menuElements"][3]["name"] = "Frequency Manager";
-    defConfig["menuElements"][3]["open"] = true;
-
-    defConfig["menuElements"][4]["name"] = "VFO Color";
+    defConfig["menuElements"][4]["name"] = "Frequency Manager";
     defConfig["menuElements"][4]["open"] = true;
+
+    defConfig["menuElements"][5]["name"] = "VFO Color";
+    defConfig["menuElements"][5]["open"] = true;
 
     defConfig["menuElements"][6]["name"] = "Band Plan";
     defConfig["menuElements"][6]["open"] = true;
@@ -186,6 +186,8 @@ int sdrpp_main(int argc, char* argv[]) {
     defConfig["moduleInstances"]["Hermes Source"]["enabled"] = true;
     defConfig["moduleInstances"]["LimeSDR Source"]["module"] = "limesdr_source";
     defConfig["moduleInstances"]["LimeSDR Source"]["enabled"] = true;
+    defConfig["moduleInstances"]["Network Source"]["module"] = "network_source";
+    defConfig["moduleInstances"]["Network Source"]["enabled"] = true;
     defConfig["moduleInstances"]["PerseusSDR Source"]["module"] = "perseus_source";
     defConfig["moduleInstances"]["PerseusSDR Source"]["enabled"] = true;
     defConfig["moduleInstances"]["PlutoSDR Source"]["module"] = "plutosdr_source";
@@ -234,13 +236,20 @@ int sdrpp_main(int argc, char* argv[]) {
 
     defConfig["modules"] = json::array();
 
-    defConfig["offsetMode"] = (int)0; // Off
-    defConfig["offset"] = 0.0;
+    defConfig["offsets"]["SpyVerter"] = 120000000.0;
+    defConfig["offsets"]["Ham-It-Up"] = 125000000.0;
+    defConfig["offsets"]["MMDS S-band (1998MHz)"] = -1998000000.0;
+    defConfig["offsets"]["DK5AV X-Band"] = -6800000000.0;
+    defConfig["offsets"]["Ku LNB (9750MHz)"] = -9750000000.0;
+    defConfig["offsets"]["Ku LNB (10700MHz)"] = -10700000000.0;
+
+    defConfig["selectedOffset"] = "None";
+    defConfig["manualOffset"] = 0.0;
     defConfig["showMenu"] = true;
     defConfig["showWaterfall"] = true;
     defConfig["showDebug"] = true;
     defConfig["source"] = "";
-    defConfig["decimationPower"] = 0;
+    defConfig["decimation"] = 1;
     defConfig["iqCorrection"] = false;
     defConfig["invertIQ"] = false;
 
@@ -322,16 +331,17 @@ int sdrpp_main(int argc, char* argv[]) {
     // Remove unused elements
     std::vector<std::string> toRemove;
     auto items = core::configManager.conf.items();
+    auto newConf = core::configManager.conf;
+    bool configCorrected = false;
     for (auto const& item : items) {
         if (!defConfig.contains(item.key())) {
             flog::info("Unused key in config {0}, repairing", item.key());
-            toRemove.push_back(item.key());
+            newConf.erase(item.key());
+            configCorrected = true;
         }
     }
-    // TODO: This is a quick fix, we should probably add a way to remove unused keys in the config
-    //       without having to do this saving like this
-    for (auto const& key : toRemove) {
-        core::configManager.conf.erase(key);
+    if (configCorrected) {
+        core::configManager.conf = newConf;
     }
 
     // Update to new module representation in config if needed
