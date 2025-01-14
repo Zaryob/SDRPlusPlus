@@ -313,6 +313,7 @@ private:
 
     static void menuDeselected(void* ctx) {
         LimeSDRSourceModule* _this = (LimeSDRSourceModule*)ctx;
+        gui::mainWindow.playButtonLocked = false;
         flog::info("LimeSDRSourceModule '{0}': Menu Deselect!", _this->name);
     }
 
@@ -406,6 +407,8 @@ private:
             config.conf["device"] = _this->selectedDevName;
             config.release(true);
         }
+
+        gui::mainWindow.playButtonLocked = _this->selectedDevName == "";
 
         if (SmGui::Combo(CONCAT("##_limesdr_sr_sel_", _this->name), &_this->srId, _this->sampleRatesTxt.c_str())) {
             _this->sampleRate = _this->sampleRates[_this->srId];

@@ -488,6 +488,7 @@ private:
 
     static void menuDeselected(void* ctx) {
         SDRPlaySourceModule* _this = (SDRPlaySourceModule*)ctx;
+        gui::mainWindow.playButtonLocked = false;
         flog::info("SDRPlaySourceModule '{0}': Menu Deselect!", _this->name);
     }
 

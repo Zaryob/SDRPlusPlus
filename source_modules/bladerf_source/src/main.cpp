@@ -355,6 +355,7 @@ private:
 
     static void menuDeselected(void* ctx) {
         BladeRFSourceModule* _this = (BladeRFSourceModule*)ctx;
+        gui::mainWindow.playButtonLocked = false;
         flog::info("BladeRFSourceModule '{0}': Menu Deselect!", _this->name);
     }
 
@@ -381,8 +382,12 @@ private:
         _this->setClockSource(_this->clocks[_this->clkId]);
         bladerf_set_sample_rate(_this->openDev, BLADERF_CHANNEL_RX(_this->chanId), _this->sampleRate, NULL);
         bladerf_set_frequency(_this->openDev, BLADERF_CHANNEL_RX(_this->chanId), _this->freq);
-        bladerf_set_bandwidth(_this->openDev, BLADERF_CHANNEL_RX(_this->chanId), (_this->bwId == _this->bandwidths.size()) ? std::clamp<uint64_t>(_this->sampleRate, _this->bwRange->min, _this->bwRange->max) : _this->bandwidths[_this->bwId], NULL);
-        bladerf_set_gain_mode(_this->openDev, BLADERF_CHANNEL_RX(_this->chanId), _this->gainModes[_this->gainMode].mode);
+        bladerf_set_bandwidth(_this->openDev, BLADERF_CHANNEL_RX(_this->chanId),
+                              (_this->bwId == _this->bandwidths.size())
+                                  ? std::clamp<uint64_t>(_this->sampleRate, _this->bwRange->min, _this->bwRange->max)
+                                  : _this->bandwidths[_this->bwId], NULL);
+        bladerf_set_gain_mode(_this->openDev, BLADERF_CHANNEL_RX(_this->chanId),
+                              _this->gainModes[_this->gainMode].mode);
 
         if (_this->selectedBladeType == BLADERF_TYPE_V2) {
             bladerf_set_bias_tee(_this->openDev, BLADERF_CHANNEL_RX(_this->chanId), _this->biasT);
@@ -449,10 +454,14 @@ private:
             bladerf_devinfo info = _this->devInfoList[_this->devId];
             _this->selectByInfo(&info);
             core::setInputSampleRate(_this->sampleRate);
-            config.acquire();
-            config.conf["device"] = _this->selectedSerial;
-            config.release(true);
+            if (_this->selectedSerial != "") {
+                config.acquire();
+                config.conf["device"] = _this->selectedSerial;
+                config.release(true);
+            }
         }
+
+        gui::mainWindow.playButtonLocked = _this->selectedSerial == "";
 
         if (SmGui::Combo(CONCAT("##_balderf_sr_sel_", _this->name), &_this->srId, _this->sampleRatesTxt.c_str())) {
             _this->sampleRate = _this->sampleRates[_this->srId];
@@ -492,7 +501,11 @@ private:
         SmGui::FillWidth();
         if (SmGui::Combo(CONCAT("##_balderf_bw_sel_", _this->name), &_this->bwId, _this->bandwidthsTxt.c_str())) {
             if (_this->running) {
-                bladerf_set_bandwidth(_this->openDev, BLADERF_CHANNEL_RX(_this->chanId), (_this->bwId == _this->bandwidths.size()) ? std::clamp<uint64_t>(_this->sampleRate, _this->bwRange->min, _this->bwRange->max) : _this->bandwidths[_this->bwId], NULL);
+                bladerf_set_bandwidth(_this->openDev, BLADERF_CHANNEL_RX(_this->chanId),
+                                      (_this->bwId == _this->bandwidths.size())
+                                          ? std::clamp<uint64_t>(_this->sampleRate, _this->bwRange->min,
+                                                                 _this->bwRange->max)
+                                          : _this->bandwidths[_this->bwId], NULL);
             }
             if (_this->selectedSerial != "") {
                 config.acquire();
@@ -518,9 +531,11 @@ private:
         SmGui::LeftLabel("Gain control mode");
         SmGui::FillWidth();
         SmGui::ForceSync();
-        if (SmGui::Combo(CONCAT("##_balderf_gm_sel_", _this->name), &_this->gainMode, _this->gainModesTxt.c_str()) && _this->selectedSerial != "") {
+        if (SmGui::Combo(CONCAT("##_balderf_gm_sel_", _this->name), &_this->gainMode, _this->gainModesTxt.c_str()) &&
+            _this->selectedSerial != "") {
             if (_this->running) {
-                bladerf_set_gain_mode(_this->openDev, BLADERF_CHANNEL_RX(_this->chanId), _this->gainModes[_this->gainMode].mode);
+                bladerf_set_gain_mode(_this->openDev, BLADERF_CHANNEL_RX(_this->chanId),
+                                      _this->gainModes[_this->gainMode].mode);
             }
             // if switched to manual, reset gains
             if (_this->gainModes[_this->gainMode].mode == BLADERF_GAIN_MANUAL && _this->running) {
@@ -538,7 +553,9 @@ private:
         }
         SmGui::LeftLabel("Gain");
         SmGui::FillWidth();
-        if (SmGui::SliderInt("##_balderf_oag_sel_", &_this->overallGain, (_this->gainRange != NULL) ? _this->gainRange->min : 0, (_this->gainRange != NULL) ? _this->gainRange->max : 60)) {
+        if (SmGui::SliderInt("##_balderf_oag_sel_", &_this->overallGain,
+                             (_this->gainRange != NULL) ? _this->gainRange->min : 0,
+                             (_this->gainRange != NULL) ? _this->gainRange->max : 60)) {
             if (_this->running) {
                 flog::info("Setting gain to {0}", _this->overallGain);
                 bladerf_set_gain(_this->openDev, BLADERF_CHANNEL_RX(_this->chanId), _this->overallGain);

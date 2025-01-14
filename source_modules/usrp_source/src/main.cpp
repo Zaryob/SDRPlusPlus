@@ -268,6 +268,7 @@ private:
 
     static void menuDeselected(void* ctx) {
         USRPSourceModule* _this = (USRPSourceModule*)ctx;
+        gui::mainWindow.playButtonLocked = false;
         flog::info("USRPSourceModule '{0}': Menu Deselect!", _this->name);
     }
 
@@ -341,6 +342,8 @@ private:
                 config.release(true);
             }
         }
+        gui::mainWindow.playButtonLocked = _this->selectedSer.empty();
+
 
         if (SmGui::Combo(CONCAT("##_usrp_sr_sel_", _this->name), &_this->srId, _this->samplerates.txt)) {
             _this->sampleRate = _this->samplerates.key(_this->srId);

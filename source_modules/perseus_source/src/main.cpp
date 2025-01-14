@@ -238,6 +238,7 @@ private:
 
     static void menuDeselected(void* ctx) {
         PerseusSourceModule* _this = (PerseusSourceModule*)ctx;
+        gui::mainWindow.playButtonLocked = false;
         flog::info("PerseusSourceModule '{0}': Menu Deselect!", _this->name);
     }
 
@@ -343,6 +344,7 @@ private:
                 config.release(true);
             }
         }
+        gui::mainWindow.playButtonLocked = _this->selectedSerial.empty();
 
         SmGui::SameLine();
         SmGui::FillWidth();

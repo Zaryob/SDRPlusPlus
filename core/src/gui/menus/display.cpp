@@ -57,6 +57,7 @@ namespace displaymenu {
         fftSizes.define(2048, "2048", 2048);
         fftSizes.define(1024, "1024", 1024);
 
+        gui::mainWindow.debugWindow = core::configManager.conf["showDebug"];
         showWaterfall = core::configManager.conf["showWaterfall"];
         showWaterfall ? gui::waterfall.showWaterfall() : gui::waterfall.hideWaterfall();
         std::string colormapName = core::configManager.conf["colorMap"];
@@ -145,7 +146,7 @@ namespace displaymenu {
             core::configManager.release(true);
         }
 
-        if (ImGui::Checkbox("Show Debug##_sdrpp", &gui::mainWindow.debugWindow)) {
+        if (ImGui::Checkbox("Show Debug##_sdrpp", &gui::mainWindow.debugWindow) || gui::mainWindow.debugWindow != core::configManager.conf["showDebug"]) {
             core::configManager.acquire();
             core::configManager.conf["showDebug"] = gui::mainWindow.debugWindow;
             core::configManager.release(true);

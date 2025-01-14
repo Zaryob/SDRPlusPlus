@@ -142,6 +142,7 @@ private:
 
     static void menuDeselected(void* ctx) {
         NetworkSourceModule* _this = (NetworkSourceModule*)ctx;
+        gui::mainWindow.playButtonLocked = false;
         flog::info("NetworkSourceModule '{0}': Menu Deselect!", _this->name);
     }
 

@@ -267,6 +267,7 @@ private:
 
     static void menuDeselected(void* ctx) {
         PlutoSDRSourceModule* _this = (PlutoSDRSourceModule*)ctx;
+        gui::mainWindow.playButtonLocked = false;
         flog::info("PlutoSDRSourceModule '{0}': Menu Deselect!", _this->name);
     }
 
@@ -366,6 +367,8 @@ private:
             config.conf["device"] = _this->devices.key(_this->devId);
             config.release(true);
         }
+
+        gui::mainWindow.playButtonLocked = _this->devices.empty();
 
         if (SmGui::Combo(CONCAT("##_pluto_sr_", _this->name), &_this->srId, _this->samplerates.txt)) {
             _this->samplerate = _this->samplerates.value(_this->srId);

@@ -177,6 +177,7 @@ private:
 
     static void menuDeselected(void* ctx) {
         AudioSourceModule* _this = (AudioSourceModule*)ctx;
+        gui::mainWindow.playButtonLocked = false;
         flog::info("AudioSourceModule '{0}': Menu Deselect!", _this->name);
     }
 
@@ -237,6 +238,8 @@ private:
             config.release(true);
         }
 
+        gui::mainWindow.playButtonLocked = _this->devices.empty();
+
         if (SmGui::Combo(CONCAT("##_audio_sr_sel_", _this->name), &_this->srId, _this->sampleRates.txt)) {
             _this->sampleRate = _this->sampleRates[_this->srId];
             core::setInputSampleRate(_this->sampleRate);
@@ -244,7 +247,7 @@ private:
                 config.acquire();
                 config.conf["devices"][_this->selectedDevice]["sampleRate"] = _this->sampleRate;
                 config.release(true);
-            }
+                }
         }
 
         SmGui::SameLine();

@@ -142,6 +142,7 @@ private:
 
     static void menuDeselected(void* ctx) {
         HermesSourceModule* _this = (HermesSourceModule*)ctx;
+        gui::mainWindow.playButtonLocked = false;
         flog::info("HermesSourceModule '{0}': Menu Deselect!", _this->name);
     }
 
@@ -215,6 +216,7 @@ private:
                 config.release(true);
             }
         }
+        gui::mainWindow.playButtonLocked = _this->selectedMac.empty();
 
         SmGui::SameLine();
         SmGui::FillWidth();

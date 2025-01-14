@@ -248,6 +248,7 @@ private:
 
     static void menuDeselected(void* ctx) {
         FobosSDRSourceModule* _this = (FobosSDRSourceModule*)ctx;
+        gui::mainWindow.playButtonLocked = false;
         flog::info("FobosSDRSourceModule '{0}': Menu Deselect!", _this->name);
     }
 
@@ -374,6 +375,8 @@ private:
             config.conf["device"] = _this->selectedSerial;
             config.release(true);
         }
+
+        gui::mainWindow.playButtonLocked = _this->devices.empty();
 
         if (SmGui::Combo(CONCAT("##_fobossdr_sr_sel_", _this->name), &_this->srId, _this->samplerates.txt)) {
             _this->sampleRate = _this->samplerates.value(_this->srId);

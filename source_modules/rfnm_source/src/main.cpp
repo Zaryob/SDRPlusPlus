@@ -239,6 +239,7 @@ private:
 
     static void menuDeselected(void* ctx) {
         RFNMSourceModule* _this = (RFNMSourceModule*)ctx;
+        gui::mainWindow.playButtonLocked = false;
         flog::info("RFNMSourceModule '{0}': Menu Deselect!", _this->name);
     }
 
@@ -344,6 +345,8 @@ private:
             core::setInputSampleRate(_this->sampleRate);
             // TODO: Save
         }
+
+        gui::mainWindow.playButtonLocked = _this->selectedSerial == "";
 
         if (SmGui::Combo(CONCAT("##_rfnm_sr_sel_", _this->name), &_this->srId, _this->samplerates.txt)) {
             _this->sampleRate = _this->samplerates.key(_this->srId);

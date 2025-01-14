@@ -71,7 +71,7 @@ namespace dsp {
             for (int i = 0; i < 5; i++) { memset(buffers[i], 0, 255); }
             for (int i = 0; i < 5; i++) { memset(outBuffers[i], 0, 255); }
             rs = correct_reed_solomon_create(correct_rs_primitive_polynomial_ccsds, 120, 11, 16);
-            if (rs == NULL) { printf("Error creating the reed solomon decoder\n"); }
+            if (rs == NULL) { flog::error("Error creating the reed solomon decoder\n"); }
 
             generic_block<FalconRS>::registerInput(_in);
             generic_block<FalconRS>::registerOutput(&out);

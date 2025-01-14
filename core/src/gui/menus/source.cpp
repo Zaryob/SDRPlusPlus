@@ -86,8 +86,15 @@ namespace sourcemenu {
 
         // Define source options
         sources.clear();
-        for (auto name : sourceNames) {
-            sources.define(name, name, name);
+
+        if(sourceNames.size() == 0) {
+            gui::mainWindow.playButtonLocked = true;
+        }
+        else {
+            gui::mainWindow.playButtonLocked = false;
+            for (auto name : sourceNames) {
+                sources.define(name, name, name);
+            }
         }
     }
 

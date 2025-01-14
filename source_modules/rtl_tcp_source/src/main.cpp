@@ -121,6 +121,7 @@ private:
 
     static void menuDeselected(void* ctx) {
         RTLTCPSourceModule* _this = (RTLTCPSourceModule*)ctx;
+        gui::mainWindow.playButtonLocked = false;
         flog::info("RTLTCPSourceModule '{0}': Menu Deselect!", _this->name);
     }
 

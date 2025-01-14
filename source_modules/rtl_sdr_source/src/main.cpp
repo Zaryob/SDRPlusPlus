@@ -271,6 +271,7 @@ private:
 
     static void menuDeselected(void* ctx) {
         RTLSDRSourceModule* _this = (RTLSDRSourceModule*)ctx;
+        gui::mainWindow.playButtonLocked = false;
         flog::info("RTLSDRSourceModule '{0}': Menu Deselect!", _this->name);
     }
 
@@ -425,7 +426,7 @@ private:
                 config.release(true);
             }
         }
-
+        gui::mainWindow.playButtonLocked = _this->selectedDevName == "";
         if (_this->tunerAgc || _this->gainList.size() == 0) { SmGui::BeginDisabled(); }
 
         SmGui::LeftLabel("Gain");
