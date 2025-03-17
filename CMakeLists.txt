@@ -54,7 +54,8 @@ option(OPT_BUILD_M17_DECODER "Build the M17 decoder module (Dependencies: codec2
 option(OPT_BUILD_METEOR_DEMODULATOR "Build the meteor demodulator module (no dependencies required)" ON)
 option(OPT_BUILD_PAGER_DECODER "Build the pager decoder module (no dependencies required)" ON)
 option(OPT_BUILD_RADIO "Main audio modulation decoder (AM, FM, SSB, etc...)" ON)
-option(OPT_BUILD_RYFI_DECODER "RyFi data link decoder" ON)
+option(OPT_BUILD_RYFI_DECODER "RyFi data link decoder" OFF)
+option(OPT_BUILD_VOR_RECEIVER "VOR beacon receiver" OFF)
 option(OPT_BUILD_WEATHER_SAT_DECODER "Build the HRPT decoder module (no dependencies required)" OFF)
 
 # Misc
@@ -199,6 +200,10 @@ if (OPT_BUILD_RTL_TCP_SOURCE)
 add_subdirectory("source_modules/rtl_tcp_source")
 endif (OPT_BUILD_RTL_TCP_SOURCE)
 
+if (OPT_BUILD_SDDC_SOURCE)
+add_subdirectory("source_modules/sddc_source")
+endif (OPT_BUILD_SDDC_SOURCE)
+
 if (OPT_BUILD_SDRPP_SERVER_SOURCE)
 add_subdirectory("source_modules/sdrpp_server_source")
 endif (OPT_BUILD_SDRPP_SERVER_SOURCE)
@@ -286,6 +291,10 @@ endif (OPT_BUILD_RADIO)
 if (OPT_BUILD_RYFI_DECODER)
 add_subdirectory("decoder_modules/ryfi_decoder")
 endif (OPT_BUILD_RYFI_DECODER)
+
+if (OPT_BUILD_VOR_RECEIVER)
+add_subdirectory("decoder_modules/vor_receiver")
+endif (OPT_BUILD_VOR_RECEIVER)
 
 if (OPT_BUILD_WEATHER_SAT_DECODER)
 add_subdirectory("decoder_modules/weather_sat_decoder")
